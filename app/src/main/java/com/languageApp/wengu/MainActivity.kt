@@ -1,0 +1,175 @@
+package com.languageApp.wengu
+
+import android.os.Bundle
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.languageApp.wengu.data.LanguageViewModel
+import com.languageApp.wengu.data.UserSettings
+import com.languageApp.wengu.modules.DialogComposable
+import com.languageApp.wengu.modules.DialogPrompt
+import com.languageApp.wengu.modules.SnackbarEvent
+import com.languageApp.wengu.ui.AnimateState
+import com.languageApp.wengu.ui.Screen
+import com.languageApp.wengu.ui.composables.screens.HomepageScreen
+import com.languageApp.wengu.ui.localWindowInfo
+import com.languageApp.wengu.ui.rememberWindowInfo
+import com.languageApp.wengu.ui.theme.WenguTheme
+import kotlinx.coroutines.launch
+
+class MainActivity : ComponentActivity() {
+    private val languageViewModel by viewModels<LanguageViewModel>(
+        factoryProducer = {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return LanguageViewModel(application) as T
+                }
+            }
+        })
+    @OptIn(ExperimentalSharedTransitionApi::class)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            val snackbarHostState = remember { SnackbarHostState() }
+            val scope = rememberCoroutineScope()
+            val navController = rememberNavController()
+
+            val animationState = languageViewModel.animationState.collectAsStateWithLifecycle()
+            val dialogState = DialogPrompt.dialogSharedFlow.collectAsStateWithLifecycle(initialValue = null)
+            val userSettingsState = languageViewModel.userSettingsState.collectAsStateWithLifecycle(initialValue = UserSettings())
+
+            val setSettingsState : (UserSettings) -> Unit = remember {
+                { state: UserSettings ->
+                    lifecycleScope.launch {
+                        Log.d("TEST", "Old:${userSettingsState.value}\nNew:${state}")
+                        languageViewModel.userSettings.saveSettingsData(state)
+                    }
+                }
+            }
+            val setAnimateState : (AnimateState) -> Unit = remember {
+                { state: AnimateState ->
+                    lifecycleScope.launch {
+                        languageViewModel.setAnimateState(state)
+                    }
+                }
+            }
+            val navigateTo : (route : String) -> Unit = remember {
+                {
+                    setAnimateState(animationState.value.copy(
+                        overlayVisibility = 0f
+                    ))
+                    navController.navigate(route = it)
+                }
+            }
+
+
+            LaunchedEffect(key1 = true) {
+                lifecycleScope.launch {
+                    SnackbarEvent.SnackbarSharedFlow.collect { snackbarEvent ->
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = snackbarEvent.text,
+                                withDismissAction = true,
+                                duration = snackbarEvent.time,
+                            )
+                        }
+                    }
+                }
+            }
+            val screens : List<Screen> = listOf(
+                Screen(
+                    route = "Homepage",
+                    screen = {
+                        HomepageScreen(navigateTo)
+                    }
+                )
+            )
+            val windowInfo = rememberWindowInfo()
+            WenguTheme(dynamicColor = false) {
+                CompositionLocalProvider(localWindowInfo provides windowInfo){
+                    Scaffold(
+                        snackbarHost = {
+                            SnackbarHost(hostState = snackbarHostState)
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    ) { innerPadding ->
+                        SharedTransitionLayout {
+                            NavHost(
+                                navController = navController, startDestination = screens[0].route,
+                                modifier = Modifier.padding(innerPadding)
+                            ) {
+                                screens.forEach { entry ->
+                                    composable(
+                                        route = entry.route,
+                                        //animation for screen transitions
+                                        enterTransition = {
+                                            slideInVertically(
+                                                animationSpec = tween(500)
+                                            ) { height ->
+                                                2 * (height / 3)
+                                            } + fadeIn(animationSpec = tween(800))
+                                        },
+                                        exitTransition = {
+                                            slideOutVertically(
+                                                animationSpec = tween(500)
+                                            ) { height ->
+                                                2 * (height / 3)
+                                            } + fadeOut(animationSpec = tween(800))
+                                        },
+                                    ) {
+                                        Box(
+                                            Modifier
+                                                .fillMaxSize()
+                                                .background(MaterialTheme.colorScheme.background)
+                                        ) {
+                                            entry.screen()
+                                            //shows dialog if dialog exists
+                                            if (dialogState.value != null) {
+                                                DialogComposable(
+                                                    windowInfo = windowInfo,
+                                                    dialogState = dialogState,
+                                                    lifecycle = lifecycleScope,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
