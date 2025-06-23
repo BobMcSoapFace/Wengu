@@ -8,5 +8,6 @@ data class AnimateState(
 ){
     companion object {
         val localAnimateState = compositionLocalOf { AnimateState() }
+        var setAnimateState : (AnimateState) -> Unit = {}
     }
 }

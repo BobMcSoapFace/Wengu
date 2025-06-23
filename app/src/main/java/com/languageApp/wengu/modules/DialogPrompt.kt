@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.languageApp.wengu.modules.DialogPrompt.Companion.DIALOG_FUNCTION_DELAY
+import com.languageApp.wengu.ui.AnimateState
 import com.languageApp.wengu.ui.WindowInfo
 import com.languageApp.wengu.ui.localWindowInfo
 import com.languageApp.wengu.ui.theme.descriptionText
@@ -77,6 +78,7 @@ fun DialogComposable(
     lifecycle: LifecycleCoroutineScope,
 ){
     val shown = remember { mutableStateOf(false) }
+    val animateState = AnimateState.localAnimateState.current
     LaunchedEffect(key1 = true) {
         shown.value = true
     }
@@ -172,6 +174,11 @@ fun DialogComposable(
                                                 ""
                                             )
                                         }
+                                        AnimateState.setAnimateState(
+                                            animateState.copy(
+                                                overlayVisibility = 0f
+                                            )
+                                        )
                                         lifecycle.launch {
                                             shown.value = false
                                             delay(DIALOG_FUNCTION_DELAY)
@@ -217,6 +224,11 @@ fun DialogComposable(
                                 .clickable {
                                     dialogState.value!!.function(
                                         ""
+                                    )
+                                    AnimateState.setAnimateState(
+                                        animateState.copy(
+                                            overlayVisibility = 0f
+                                        )
                                     )
                                     lifecycle.launch {
                                         shown.value = false

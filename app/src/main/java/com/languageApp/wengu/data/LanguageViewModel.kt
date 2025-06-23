@@ -3,6 +3,7 @@ package com.languageApp.wengu.data
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.languageApp.wengu.data.settings.UserSettings
 import com.languageApp.wengu.data.settings.UserSettingsData
 import com.languageApp.wengu.ui.AnimateState
@@ -43,6 +44,8 @@ class LanguageViewModel(
     val userSettings: UserSettingsData = UserSettingsData(application.applicationContext)
     val userSettingsState = userSettings.getSettingsData().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserSettings())
     val animationState =_animateState.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AnimateState())
+    val vocabState = _vocab.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf())
+    val testState = _tests.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf())
     val sortTypeState = _testResultSortType.combine(_testSortType){testResult, test ->
         Sort(
             vocabSortType = SortType.Vocab.DATE,
@@ -60,11 +63,18 @@ class LanguageViewModel(
         _animateState.emit(animateState)
     }
 
-    suspend fun getTestResults(test : Test) : List<TestResult> {
-        return db.dao.findTestResultsByTestId(test.id).first()
-    }
-    suspend fun getTestResults(vocab : Vocab) : List<TestResult> {
-        return db.dao.findTestResultsByVocabId(vocab.id).first()
+    suspend fun getTestResults(data : DataEntry) : List<TestResult> {
+        return when(data){
+            is Test -> {
+                db.dao.findTestResultsByTestId(data.id).first()
+            }
+            is Vocab -> {
+                db.dao.findTestResultsByVocabId(data.id).first()
+            }
+            else -> {
+                throw IllegalArgumentException("DataEntry class not accepted for getTestResults (only Test and Vocab)")
+            }
+        }
     }
     fun onDataAction(action : DataAction){
         viewModelScope.launch {

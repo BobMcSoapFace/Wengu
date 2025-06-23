@@ -44,6 +44,7 @@ import com.languageApp.wengu.modules.SnackbarEvent
 import com.languageApp.wengu.ui.AnimateState
 import com.languageApp.wengu.ui.Screen
 import com.languageApp.wengu.ui.composables.screens.HomepageScreen
+import com.languageApp.wengu.ui.composables.units.Overlay
 import com.languageApp.wengu.ui.localWindowInfo
 import com.languageApp.wengu.ui.rememberWindowInfo
 import com.languageApp.wengu.ui.theme.WenguTheme
@@ -79,6 +80,8 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
             val navController = rememberNavController()
 
+            val vocabListState = languageViewModel.vocabState.collectAsStateWithLifecycle()
+            val testListState = languageViewModel.testState.collectAsStateWithLifecycle()
             val animationState = languageViewModel.animationState.collectAsStateWithLifecycle()
             val sortTypeState = languageViewModel.sortTypeState.collectAsStateWithLifecycle()
             val dialogState = DialogPrompt.dialogSharedFlow.collectAsStateWithLifecycle(initialValue = null)
@@ -103,6 +106,7 @@ class MainActivity : ComponentActivity() {
 
 
             LaunchedEffect(key1 = true) {
+                AnimateState.setAnimateState = setAnimateState
                 lifecycleScope.launch {
                     SnackbarEvent.SnackbarSharedFlow.collect { snackbarEvent ->
                         scope.launch {
@@ -119,7 +123,13 @@ class MainActivity : ComponentActivity() {
                 Screen(
                     route = "Homepage",
                     screen = {
-                        HomepageScreen(navigateTo)
+                        HomepageScreen(
+                            vocabList = vocabListState,
+                            testList = testListState,
+                            getTestResults = languageViewModel::getTestResults,
+                            onDataAction = languageViewModel::onDataAction,
+                            navigateTo = navigateTo
+                        )
                     }
                 )
             )
@@ -168,6 +178,7 @@ class MainActivity : ComponentActivity() {
                                                 .background(MaterialTheme.colorScheme.background)
                                         ) {
                                             entry.screen()
+                                            Overlay()
                                             //shows dialog if dialog exists
                                             if (dialogState.value != null) {
                                                 DialogComposable(

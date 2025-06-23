@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.paging.Config
+import com.languageApp.wengu.ui.theme.descriptionText
+import com.languageApp.wengu.ui.theme.moduleLabel
 import com.languageApp.wengu.ui.theme.moduleLabelBold
 
 @Composable
@@ -46,6 +48,16 @@ data class WindowInfo(
         WindowType.Medium -> 12.dp
         WindowType.Expanded -> 20.dp
     }
+    val columnItemOffset : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 2.dp
+        WindowType.Medium -> 4.dp
+        WindowType.Expanded -> 6.dp
+    }
+    val screenPadding : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 10.dp
+        WindowType.Medium -> 30.dp
+        WindowType.Expanded -> 55.dp
+    }
     val buttonPadding : Dp = when(screenHeightInfo){
         WindowType.Compact -> 2.dp
         WindowType.Medium -> 4.dp
@@ -55,11 +67,6 @@ data class WindowInfo(
         WindowType.Compact -> 15
         WindowType.Medium -> 10
         WindowType.Expanded -> 7
-    }
-    val buttonTextSize : Int = when(screenHeightInfo){
-        WindowType.Compact -> 12
-        WindowType.Medium -> 12
-        WindowType.Expanded -> 15
     }
     val buttonAnimateSize : Dp = when(screenHeightInfo){
         WindowType.Compact -> 2.dp
@@ -71,8 +78,32 @@ data class WindowInfo(
         WindowType.Medium -> 85.dp
         WindowType.Expanded -> 110.dp
     }
-    val buttonTextStyle : TextStyle = moduleLabelBold + TextStyle(fontSize = buttonTextSize.sp)
+    val vocabItemHeight : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 60.dp
+        WindowType.Medium -> 75.dp
+        WindowType.Expanded -> 95.dp
+    }
 
+
+    // Text styles
+    private val buttonTextSize : Int = when(screenHeightInfo){
+        WindowType.Compact -> 12
+        WindowType.Medium -> 12
+        WindowType.Expanded -> 15
+    }
+    private val vocabTextSize : Int = when(screenHeightInfo){
+        WindowType.Compact -> 18
+        WindowType.Medium -> 24
+        WindowType.Expanded -> 32
+    }
+    private val footnoteTextSize : Int = when(screenHeightInfo){
+        WindowType.Compact -> 8
+        WindowType.Medium -> 10
+        WindowType.Expanded -> 12
+    }
+    val buttonTextStyle : TextStyle = moduleLabelBold + TextStyle(fontSize = buttonTextSize.sp)
+    val vocabTextStyle : TextStyle = moduleLabelBold + TextStyle(fontSize = vocabTextSize.sp)
+    val footnoteTextStyle : TextStyle = descriptionText + TextStyle(fontSize = footnoteTextSize.sp)
 
 
     sealed class WindowType {

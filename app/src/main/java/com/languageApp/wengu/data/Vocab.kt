@@ -19,14 +19,6 @@ data class Vocab(
     val vocabLanguage : String,
     val dateCreated : Long, //formatted in total seconds since 1970/1/1
 ) : DataEntry {
-    constructor(): this(
-        vocab = "",
-        pronunciation = "",
-        translation = "",
-        type = "",
-        vocabLanguage = "",
-        dateCreated = 0L,
-    )
     fun getDate() : Date {
         return Date(dateCreated)
     }
