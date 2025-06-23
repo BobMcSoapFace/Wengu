@@ -1,8 +1,18 @@
 package com.languageApp.wengu.modules
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -16,19 +26,26 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.languageApp.wengu.modules.DialogPrompt.Companion.DIALOG_FUNCTION_DELAY
 import com.languageApp.wengu.ui.WindowInfo
+import com.languageApp.wengu.ui.localWindowInfo
 import com.languageApp.wengu.ui.theme.descriptionText
 import com.languageApp.wengu.ui.theme.moduleLabel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -45,6 +62,7 @@ class DialogPrompt(
         suspend fun sendDialog(dialog : DialogPrompt?) {
             _dialogSharedFlow.emit(dialog)
         }
+        val DIALOG_FUNCTION_DELAY : Long = 200L
     }
 }
 enum class DialogPromptType {
@@ -58,79 +76,137 @@ fun DialogComposable(
     dialogState: State<DialogPrompt?>,
     lifecycle: LifecycleCoroutineScope,
 ){
+    val shown = remember { mutableStateOf(false) }
+    LaunchedEffect(key1 = true) {
+        shown.value = true
+    }
     Box(modifier =
-        Modifier.fillMaxSize()
-        .background(Color.Transparent)
+    Modifier
+        .fillMaxSize()
+        .background(Color.Transparent),
+        contentAlignment = Alignment.Center
     ){
-        Column(
-            modifier = Modifier
-                .then(
-                    if (windowInfo.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                        Modifier
-                            .fillMaxWidth(0.85f)
-                    } else {
-                        Modifier
-                            .fillMaxWidth(0.4f)
-                    }
-                )
-                .height(IntrinsicSize.Max)
-                .defaultMinSize(
-                    minHeight = windowInfo.screenHeight.times(
+        AnimatedVisibility(
+            shown.value,
+        ) {
+            Column(
+                modifier = Modifier
+                    .then(
                         if (windowInfo.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                            0.05f
-                        } else 0.5f
+                            Modifier
+                                .fillMaxWidth(0.85f)
+                        } else {
+                            Modifier
+                                .fillMaxWidth(0.4f)
+                        }
                     )
-                )
-                .clip(
-                    RoundedCornerShape(
-                        windowInfo.getMinTimes(
-                            0.03f
+                    .height(IntrinsicSize.Max)
+                    .defaultMinSize(
+                        minHeight = windowInfo.screenHeight.times(
+                            if (windowInfo.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                                0.05f
+                            } else 0.5f
                         )
                     )
-                )
-                .background(MaterialTheme.colorScheme.primary)
-                .align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.5f)
-                    .padding(windowInfo.getMinTimes(0.03f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = dialogState.value!!.message,
-                    style = descriptionText + TextStyle(
-                        color =
-                        MaterialTheme.colorScheme.onPrimary,
-                        textAlign = TextAlign.Center,
-                        fontSize = windowInfo.getMinTimes(0.04f).value.sp
+                    .clip(
+                        RoundedCornerShape(
+                            windowInfo.getMinTimes(
+                                0.03f
+                            )
+                        )
                     )
-                )
-            }
-            Box(
-                Modifier
-                    .height(1.dp)
-                    .fillMaxWidth(0.9f)
-                    .background(MaterialTheme.colorScheme.onTertiary)
-            )
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(windowInfo.getMinTimes(0.25f))
-                    .padding(windowInfo.getMinTimes(0.02f))
+                    .background(MaterialTheme.colorScheme.primary)
+                    .align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                when (dialogState.value!!.type) {
-                    DialogPromptType.CONFIRMATION -> {
-                        repeat(2) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.5f)
+                        .padding(windowInfo.getMinTimes(0.03f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = dialogState.value!!.message,
+                        style = descriptionText + TextStyle(
+                            color =
+                            MaterialTheme.colorScheme.onPrimary,
+                            textAlign = TextAlign.Center,
+                            fontSize = windowInfo.getMinTimes(0.04f).value.sp
+                        )
+                    )
+                }
+                Box(
+                    Modifier
+                        .height(1.dp)
+                        .fillMaxWidth(0.9f)
+                        .background(MaterialTheme.colorScheme.onTertiary)
+                )
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(windowInfo.getMinTimes(0.25f))
+                        .padding(windowInfo.getMinTimes(0.02f))
+                ) {
+                    when (dialogState.value!!.type) {
+                        DialogPromptType.CONFIRMATION -> {
+                            repeat(2) {
+                                Box(Modifier
+                                    .fillMaxWidth(0.485f)
+                                    .fillMaxHeight()
+                                    .align(
+                                        if (it == 0) Alignment.CenterStart
+                                        else Alignment.CenterEnd
+                                    )
+                                    .clip(
+                                        RoundedCornerShape(
+                                            windowInfo.getMinTimes(
+                                                0.035f
+                                            )
+                                        )
+                                    )
+                                    .clickable {
+                                        if (it == 1) {
+                                            dialogState.value!!.function(
+                                                ""
+                                            )
+                                        }
+                                        lifecycle.launch {
+                                            shown.value = false
+                                            delay(DIALOG_FUNCTION_DELAY)
+                                            DialogPrompt.sendDialog(
+                                                null
+                                            )
+                                        }
+                                    }
+                                    .padding(
+                                        windowInfo.getMinTimes(
+                                            0.0325f
+                                        )
+                                    ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (it == 0) "Cancel" else dialogState.value!!.confirmLabel,
+                                        style = moduleLabel + TextStyle(
+                                            color =
+                                            MaterialTheme.colorScheme.onPrimary,
+                                            textAlign = TextAlign.Center,
+                                            fontSize = windowInfo.getMinTimes(
+                                                0.04f
+                                            ).value.sp
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                        else -> {
                             Box(Modifier
-                                .fillMaxWidth(0.485f)
+                                .fillMaxSize()
                                 .fillMaxHeight()
-                                .align(
-                                    if (it == 0) Alignment.CenterStart
-                                    else Alignment.CenterEnd
-                                )
+                                .align(Alignment.Center)
                                 .clip(
                                     RoundedCornerShape(
                                         windowInfo.getMinTimes(
@@ -139,12 +215,12 @@ fun DialogComposable(
                                     )
                                 )
                                 .clickable {
-                                    if (it == 1) {
-                                        dialogState.value!!.function(
-                                            ""
-                                        )
-                                    }
+                                    dialogState.value!!.function(
+                                        ""
+                                    )
                                     lifecycle.launch {
+                                        shown.value = false
+                                        delay(DIALOG_FUNCTION_DELAY)
                                         DialogPrompt.sendDialog(
                                             null
                                         )
@@ -158,7 +234,7 @@ fun DialogComposable(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = if (it == 0) "Cancel" else dialogState.value!!.confirmLabel,
+                                    text = dialogState.value!!.confirmLabel,
                                     style = moduleLabel + TextStyle(
                                         color =
                                         MaterialTheme.colorScheme.onPrimary,
@@ -169,49 +245,6 @@ fun DialogComposable(
                                     )
                                 )
                             }
-                        }
-                    }
-
-                    else -> {
-                        Box(Modifier
-                            .fillMaxSize()
-                            .fillMaxHeight()
-                            .align(Alignment.Center)
-                            .clip(
-                                RoundedCornerShape(
-                                    windowInfo.getMinTimes(
-                                        0.035f
-                                    )
-                                )
-                            )
-                            .clickable {
-                                dialogState.value!!.function(
-                                    ""
-                                )
-                                lifecycle.launch {
-                                    DialogPrompt.sendDialog(
-                                        null
-                                    )
-                                }
-                            }
-                            .padding(
-                                windowInfo.getMinTimes(
-                                    0.0325f
-                                )
-                            ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = dialogState.value!!.confirmLabel,
-                                style = moduleLabel + TextStyle(
-                                    color =
-                                    MaterialTheme.colorScheme.onPrimary,
-                                    textAlign = TextAlign.Center,
-                                    fontSize = windowInfo.getMinTimes(
-                                        0.04f
-                                    ).value.sp
-                                )
-                            )
                         }
                     }
                 }

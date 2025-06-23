@@ -83,7 +83,7 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
     // Room
-    val room_version = "2.6.0" //keep cause its not wonky with coroutines and itself
+    val room_version = "2.7.2" //keep cause its not wonky with coroutines and itself
     implementation("androidx.room:room-ktx:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-paging:$room_version")

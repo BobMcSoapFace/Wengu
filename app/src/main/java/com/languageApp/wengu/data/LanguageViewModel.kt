@@ -3,28 +3,113 @@ package com.languageApp.wengu.data
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.languageApp.wengu.data.settings.UserSettings
+import com.languageApp.wengu.data.settings.UserSettingsData
 import com.languageApp.wengu.ui.AnimateState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class LanguageViewModel(
-    private val application : Application
+    private val application : Application,
+    private val db : AppDatabase,
 ) : ViewModel() {
-    private val _sortType = MutableStateFlow(SortType.DATE_UPDATED)
+    private val _vocabSortType = MutableStateFlow(SortType.Vocab.DATE)
+    private val _testSortType = MutableStateFlow(SortType.Test.DATE)
+    private val _testResultSortType = MutableStateFlow(SortType.TestResult.DATE)
     private val _animateState = MutableStateFlow(AnimateState())
-
+    private val _vocab : Flow<List<Vocab>> = _vocabSortType.flatMapLatest {
+        when(_vocabSortType.value) {
+            SortType.Vocab.VOCAB -> db.dao.getVocabAsc(type = Vocab.Properties.VOCAB.label)
+            SortType.Vocab.TYPE -> db.dao.getVocabAsc(type = Vocab.Properties.TYPE.label)
+            SortType.Vocab.DATE -> db.dao.getVocabDesc(type = Vocab.Properties.DATE.label)
+            else -> db.dao.getVocabDesc(type = Vocab.Properties.ID.label)
+        }
+    }
+    private val _tests : Flow<List<Test>> = _testSortType.flatMapLatest {
+        when(_testSortType.value) {
+            SortType.Test.ID -> db.dao.getTestDesc(type = Test.Properties.ID.label)
+            SortType.Test.LANGUAGE -> db.dao.getTestAsc(type = Test.Properties.LANGUAGE.label)
+            SortType.Test.DATE -> db.dao.getTestDesc(type = Test.Properties.DATE.label)
+        }
+    }
     val userSettings: UserSettingsData = UserSettingsData(application.applicationContext)
-    val userSettingsState = userSettings.getSettingsData().stateIn(viewModelScope,
-        SharingStarted.WhileSubscribed(5000), UserSettings())
-    val animationState =_animateState.stateIn(viewModelScope,
-        SharingStarted.WhileSubscribed(5000), AnimateState()
+    val userSettingsState = userSettings.getSettingsData().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserSettings())
+    val animationState =_animateState.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AnimateState())
+    val sortTypeState = _testResultSortType.combine(_testSortType){testResult, test ->
+        Sort(
+            vocabSortType = SortType.Vocab.DATE,
+            testSortType = test,
+            testResultSortType = testResult,
+        )
+    }.combine(_vocabSortType){sort, vocab ->
+        sort.copy(vocabSortType = vocab)
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000), Sort()
     )
-    val sortTypeState = _sortType.stateIn(viewModelScope,
-        SharingStarted.WhileSubscribed(5000), SortType.DATE_UPDATED)
+
     suspend fun setAnimateState(animateState: AnimateState){
         _animateState.emit(animateState)
     }
 
-
+    suspend fun getTestResults(test : Test) : List<TestResult> {
+        return db.dao.findTestResultsByTestId(test.id).first()
+    }
+    suspend fun getTestResults(vocab : Vocab) : List<TestResult> {
+        return db.dao.findTestResultsByVocabId(vocab.id).first()
+    }
+    fun onDataAction(action : DataAction){
+        viewModelScope.launch {
+            when(action){
+                is DataAction.Upsert -> {
+                    when(action.dataObj){
+                        is Vocab  -> {
+                            db.dao.upsertVocab(action.dataObj)
+                        }
+                        is TestResult -> {
+                            db.dao.upsertTestResult(action.dataObj)
+                        }
+                        is Test -> {
+                            db.dao.upsertTest(action.dataObj)
+                        }
+                    }
+                }
+                is DataAction.Delete -> {
+                    when(action.dataObj){
+                        is Vocab  -> {
+                            db.dao.deleteVocab(action.dataObj)
+                        }
+                        is TestResult -> {
+                            db.dao.deleteTestResult(action.dataObj)
+                        }
+                        is Test -> {
+                            db.dao.deleteTest(action.dataObj)
+                        }
+                    }
+                }
+                is DataAction.Sort -> {
+                    when(action.type){
+                        is SortType.Vocab -> {
+                            _vocabSortType.emit(action.type)
+                        }
+                        is SortType.Test -> {
+                            _testSortType.emit(action.type)
+                        }
+                        is SortType.TestResult -> {
+                            _testResultSortType.emit(action.type)
+                        }
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
 }

@@ -67,7 +67,7 @@ data class WindowInfo(
         WindowType.Expanded -> 4.dp
     }
     val navigateBarHeight : Dp = when(screenHeightInfo){
-        WindowType.Compact -> 100.dp
+        WindowType.Compact -> 90.dp
         WindowType.Medium -> 85.dp
         WindowType.Expanded -> 110.dp
     }

@@ -1,7 +1,6 @@
 package com.languageApp.wengu
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -33,8 +32,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
+import com.languageApp.wengu.data.AppDatabase
 import com.languageApp.wengu.data.LanguageViewModel
-import com.languageApp.wengu.data.UserSettings
+import com.languageApp.wengu.data.Sort
+import com.languageApp.wengu.data.settings.UserSettings
+import com.languageApp.wengu.data.settings.UserSettingsData
 import com.languageApp.wengu.modules.DialogComposable
 import com.languageApp.wengu.modules.DialogPrompt
 import com.languageApp.wengu.modules.SnackbarEvent
@@ -47,11 +50,23 @@ import com.languageApp.wengu.ui.theme.WenguTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private val db by lazy {
+        Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java,
+            AppDatabase.DATABASE_NAME
+        )
+            .fallbackToDestructiveMigration()
+            /*
+            * ^ use if 1. altering database columns/tables AND 2. don't need data to migrate
+            */
+            .build()
+    }
     private val languageViewModel by viewModels<LanguageViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return LanguageViewModel(application) as T
+                    return LanguageViewModel(application, db) as T
                 }
             }
         })
@@ -65,29 +80,23 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             val animationState = languageViewModel.animationState.collectAsStateWithLifecycle()
+            val sortTypeState = languageViewModel.sortTypeState.collectAsStateWithLifecycle()
             val dialogState = DialogPrompt.dialogSharedFlow.collectAsStateWithLifecycle(initialValue = null)
             val userSettingsState = languageViewModel.userSettingsState.collectAsStateWithLifecycle(initialValue = UserSettings())
 
             val setSettingsState : (UserSettings) -> Unit = remember {
                 { state: UserSettings ->
-                    lifecycleScope.launch {
-                        Log.d("TEST", "Old:${userSettingsState.value}\nNew:${state}")
-                        languageViewModel.userSettings.saveSettingsData(state)
-                    }
+                    lifecycleScope.launch { languageViewModel.userSettings.saveSettingsData(state) }
                 }
             }
             val setAnimateState : (AnimateState) -> Unit = remember {
                 { state: AnimateState ->
-                    lifecycleScope.launch {
-                        languageViewModel.setAnimateState(state)
-                    }
+                    lifecycleScope.launch { languageViewModel.setAnimateState(state) }
                 }
             }
             val navigateTo : (route : String) -> Unit = remember {
                 {
-                    setAnimateState(animationState.value.copy(
-                        overlayVisibility = 0f
-                    ))
+                    setAnimateState(animationState.value.copy(overlayVisibility = 0f))
                     navController.navigate(route = it)
                 }
             }
@@ -116,7 +125,13 @@ class MainActivity : ComponentActivity() {
             )
             val windowInfo = rememberWindowInfo()
             WenguTheme(dynamicColor = false) {
-                CompositionLocalProvider(localWindowInfo provides windowInfo){
+                CompositionLocalProvider(
+                    localWindowInfo provides windowInfo,
+                    UserSettings.localSettings provides userSettingsState.value,
+                    UserSettingsData.localSettingsData provides languageViewModel.userSettings,
+                    Sort.localSort provides sortTypeState.value,
+                    AnimateState.localAnimateState provides animationState.value
+                ){
                     Scaffold(
                         snackbarHost = {
                             SnackbarHost(hostState = snackbarHostState)
