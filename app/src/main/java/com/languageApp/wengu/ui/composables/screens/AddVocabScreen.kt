@@ -32,7 +32,9 @@ import com.languageApp.wengu.ui.InteractableIcon
 import com.languageApp.wengu.ui.WindowInfo
 import com.languageApp.wengu.ui.composables.units.buttons.FieldSelection
 import com.languageApp.wengu.ui.composables.units.buttons.IconButton
+import com.languageApp.wengu.ui.composables.units.buttons.ListSelection
 import com.languageApp.wengu.ui.localWindowInfo
+import kotlinx.serialization.json.Json
 
 @Composable
 fun AddVocabScreen(
@@ -74,45 +76,68 @@ fun AddVocabScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.primary)
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(localWindowInfo.current.screenPadding)
             , horizontalAlignment = Alignment.CenterHorizontally
+            , userScrollEnabled = true
         ) {
-            FieldSelection(
-                inputValue = vocabName.value,
-                onInputChange = { vocabName.value = it },
-                label = "Name",
-                buttonColor = MaterialTheme.colorScheme.secondary,
-                textColor = MaterialTheme.colorScheme.onSecondary,
-                onTextColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.height(localWindowInfo.current.textFieldHeight)
-            )
-            Footnote("word(s) of vocabulary term")
-            Divider()
-            FieldSelection(
-                inputValue = pronunciation.value,
-                onInputChange = { pronunciation.value = it },
-                label = "Pronunciation",
-                buttonColor = MaterialTheme.colorScheme.secondary,
-                textColor = MaterialTheme.colorScheme.onSecondary,
-                onTextColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.height(localWindowInfo.current.textFieldHeight)
-            )
-            Footnote("the pronunciation of the term - \"${pronunciation.value}\"")
-            Divider()
-            FieldSelection(
-                inputValue = translation.value,
-                onInputChange = { translation.value = it },
-                label = "Definition",
-                buttonColor = MaterialTheme.colorScheme.secondary,
-                textColor = MaterialTheme.colorScheme.onSecondary,
-                onTextColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.height(localWindowInfo.current.textFieldHeight)
-            )
-            Footnote("the definition when translated - \"${translation.value}\"")
-            Divider()
+            item {
+                FieldSelection(
+                    inputValue = vocabName.value,
+                    onInputChange = { vocabName.value = it },
+                    label = "Name",
+                    buttonColor = MaterialTheme.colorScheme.secondary,
+                    textColor = MaterialTheme.colorScheme.onSecondary,
+                    onTextColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.height(localWindowInfo.current.textFieldHeight)
+                )
+                Footnote("word(s) of vocabulary term")
+                Divider()
+                FieldSelection(
+                    inputValue = pronunciation.value,
+                    onInputChange = { pronunciation.value = it },
+                    label = "Pronunciation",
+                    buttonColor = MaterialTheme.colorScheme.secondary,
+                    textColor = MaterialTheme.colorScheme.onSecondary,
+                    onTextColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.height(localWindowInfo.current.textFieldHeight)
+                )
+                Footnote("the pronunciation of the term - \"${pronunciation.value}\"")
+                Divider()
+                FieldSelection(
+                    inputValue = translation.value,
+                    onInputChange = { translation.value = it },
+                    label = "Definition",
+                    buttonColor = MaterialTheme.colorScheme.secondary,
+                    textColor = MaterialTheme.colorScheme.onSecondary,
+                    onTextColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.height(localWindowInfo.current.textFieldHeight)
+                )
+                Footnote("the definition when translated - \"${translation.value}\"")
+                Divider()
+                val testList = rememberSaveable { mutableStateOf(listOf("item1", "item2", "item3")) }
+                val testSelected = rememberSaveable { mutableStateOf(testList.value) }
+                ListSelection(
+                    list = testList,
+                    selected = testSelected,
+                    onClick = {
+                        testSelected.value -= it
+                              },
+                    onSelect = {
+                        testSelected.value += (it)
+                    },
+                    buttonColor = MaterialTheme.colorScheme.secondary,
+                    textColor = MaterialTheme.colorScheme.onSecondary,
+                    height = localWindowInfo.current.longButtonHeight,
+                    width = localWindowInfo.current.longButtonWidth *
+                            (if(localWindowInfo.current.screenHeightInfo == WindowInfo.WindowType.Compact) 3 else 1),
+                    modifier = Modifier,
+                )
+                Divider()
+                Divider()
+            }
         }
         IconButton(
             iconInteractableIcon = InteractableIcon(

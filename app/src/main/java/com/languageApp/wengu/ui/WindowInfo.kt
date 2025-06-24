@@ -109,6 +109,26 @@ data class WindowInfo(
         WindowType.Medium -> 20.dp
         WindowType.Expanded -> 30.dp
     }
+    val longButtonWidth : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 200.dp
+        WindowType.Medium -> 325.dp
+        WindowType.Expanded -> 400.dp
+    }
+    val longButtonHeight : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 80.dp
+        WindowType.Medium -> 75.dp
+        WindowType.Expanded -> 100.dp
+    }
+    val dialogListHeight : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 100.dp
+        WindowType.Medium -> 155.dp
+        WindowType.Expanded -> 210.dp
+    }
+    val dialogListItemHeight : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 30.dp
+        WindowType.Medium -> 40.dp
+        WindowType.Expanded -> 50.dp
+    }
 
     // Text styles
     val buttonTextSize : Int = when(screenHeightInfo){

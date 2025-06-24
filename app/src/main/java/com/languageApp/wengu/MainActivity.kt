@@ -24,6 +24,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -106,6 +107,7 @@ class MainActivity : ComponentActivity() {
             }
             val navigateBack : () -> Unit = remember {
                 {
+                    setAnimateState(animationState.value.copy(overlayVisibility = 0f))
                     navController.navigateUp()
                 }
             }
