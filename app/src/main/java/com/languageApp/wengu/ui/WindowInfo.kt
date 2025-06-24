@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
@@ -58,6 +59,11 @@ data class WindowInfo(
         WindowType.Medium -> 30.dp
         WindowType.Expanded -> 55.dp
     }
+    val fieldPadding : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 5.dp
+        WindowType.Medium -> 10.dp
+        WindowType.Expanded -> 15.dp
+    }
     val buttonPadding : Dp = when(screenHeightInfo){
         WindowType.Compact -> 2.dp
         WindowType.Medium -> 4.dp
@@ -83,13 +89,37 @@ data class WindowInfo(
         WindowType.Medium -> 75.dp
         WindowType.Expanded -> 95.dp
     }
-
+    val textFieldHeight : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 60.dp
+        WindowType.Medium -> 75.dp
+        WindowType.Expanded -> 95.dp
+    }
+    val landscapeButtonWidth : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 80.dp
+        WindowType.Medium -> 150.dp
+        WindowType.Expanded -> 200.dp
+    }
+    val landscapeButtonHeight : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 80.dp
+        WindowType.Medium -> 75.dp
+        WindowType.Expanded -> 100.dp
+    }
+    val dividerHeight : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 15.dp
+        WindowType.Medium -> 20.dp
+        WindowType.Expanded -> 30.dp
+    }
 
     // Text styles
-    private val buttonTextSize : Int = when(screenHeightInfo){
+    val buttonTextSize : Int = when(screenHeightInfo){
         WindowType.Compact -> 12
         WindowType.Medium -> 12
         WindowType.Expanded -> 15
+    }
+    val largeButtonTextSize : Int = when(screenHeightInfo){
+        WindowType.Compact -> 18
+        WindowType.Medium -> 24
+        WindowType.Expanded -> 30
     }
     private val vocabTextSize : Int = when(screenHeightInfo){
         WindowType.Compact -> 18
@@ -97,12 +127,13 @@ data class WindowInfo(
         WindowType.Expanded -> 32
     }
     private val footnoteTextSize : Int = when(screenHeightInfo){
-        WindowType.Compact -> 8
-        WindowType.Medium -> 10
-        WindowType.Expanded -> 12
+        WindowType.Compact -> 10
+        WindowType.Medium -> 11
+        WindowType.Expanded -> 15
     }
     val buttonTextStyle : TextStyle = moduleLabelBold + TextStyle(fontSize = buttonTextSize.sp)
     val vocabTextStyle : TextStyle = moduleLabelBold + TextStyle(fontSize = vocabTextSize.sp)
+    val fieldLabeltextStyle = vocabTextStyle + TextStyle()
     val footnoteTextStyle : TextStyle = descriptionText + TextStyle(fontSize = footnoteTextSize.sp)
 
 

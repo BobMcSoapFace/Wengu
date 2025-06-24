@@ -104,6 +104,7 @@ fun HomepageScreen(
                 VocabScreen(
                     vocabList = vocabList,
                     getTestResults = getTestResults,
+                    navigateTo = navigateTo,
                 )
             }
             HomepageState.SETTINGS -> {}

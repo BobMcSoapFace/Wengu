@@ -36,25 +36,20 @@ import com.languageApp.wengu.data.TestResult
 import com.languageApp.wengu.data.Vocab
 import com.languageApp.wengu.ui.localWindowInfo
 import java.time.Clock
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
+import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-fun Date.toString(alwaysDate : Boolean) : String {
-    val instant = this.toInstant().atZone(ZoneId.systemDefault())
-    val weekPassed = (Clock.systemUTC().millis()-this.toInstant().toEpochMilli())/1000 > (3600*24*7)
-    return if(weekPassed && !alwaysDate   )
-        "${instant.dayOfWeek.toString().lowercase().substring(0, 3).replaceFirstChar { it.uppercaseChar() } + "."} " +
-                " ${if(instant.hour%12==0) "12" else instant.hour%12}:${if(instant.minute < 10) "0" else ""}${instant.minute} ${if(instant.hour >= 12) "PM" else "AM"}"
-    else
-        "${instant.month} ${instant.dayOfMonth} ${instant.year}"
-}
+@OptIn(ExperimentalTime::class)
 @Composable
 fun VocabScreen(
     vocabList : State<List<Vocab>>,
     getTestResults : suspend (DataEntry) -> List<TestResult>,
     modifier : Modifier = Modifier,
+    navigateTo : (String) -> Unit,
 ){
     LazyColumn(
         modifier = modifier
@@ -79,7 +74,7 @@ fun VocabScreen(
                     .clip(RoundedCornerShape(localWindowInfo.current.buttonRounding))
                     .background(MaterialTheme.colorScheme.primary)
                     .clickable {
-
+                        navigateTo("AddVocab")
                     }
                     .padding(localWindowInfo.current.closeOffset)
             ){
@@ -105,7 +100,7 @@ fun VocabScreen(
                         .align(Alignment.BottomStart)
                 )
                 Text(
-                    text = Date(vocab.dateCreated).toString(false),
+                    text = LocalDateTime.ofInstant(java.time.Instant.ofEpochSecond(vocab.dateCreated), ZoneId.systemDefault()).toString().split("T")[0],
                     textAlign = TextAlign.Right,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onTertiary,

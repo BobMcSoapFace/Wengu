@@ -43,6 +43,7 @@ import com.languageApp.wengu.modules.DialogPrompt
 import com.languageApp.wengu.modules.SnackbarEvent
 import com.languageApp.wengu.ui.AnimateState
 import com.languageApp.wengu.ui.Screen
+import com.languageApp.wengu.ui.composables.screens.AddVocabScreen
 import com.languageApp.wengu.ui.composables.screens.HomepageScreen
 import com.languageApp.wengu.ui.composables.units.Overlay
 import com.languageApp.wengu.ui.localWindowInfo
@@ -103,6 +104,11 @@ class MainActivity : ComponentActivity() {
                     navController.navigate(route = it)
                 }
             }
+            val navigateBack : () -> Unit = remember {
+                {
+                    navController.navigateUp()
+                }
+            }
 
 
             LaunchedEffect(key1 = true) {
@@ -129,6 +135,17 @@ class MainActivity : ComponentActivity() {
                             getTestResults = languageViewModel::getTestResults,
                             onDataAction = languageViewModel::onDataAction,
                             navigateTo = navigateTo
+                        )
+                    }
+                ),
+                Screen(
+                    route = "AddVocab",
+                    screen = {
+                        AddVocabScreen(
+                            vocabList = vocabListState,
+                            onDataAction = languageViewModel::onDataAction,
+                            navigateTo = navigateTo,
+                            navigateBack = navigateBack,
                         )
                     }
                 )
