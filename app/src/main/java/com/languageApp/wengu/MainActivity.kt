@@ -89,11 +89,6 @@ class MainActivity : ComponentActivity() {
             val dialogState = DialogPrompt.dialogSharedFlow.collectAsStateWithLifecycle(initialValue = null)
             val userSettingsState = languageViewModel.userSettingsState.collectAsStateWithLifecycle(initialValue = UserSettings())
 
-            val setSettingsState : (UserSettings) -> Unit = remember {
-                { state: UserSettings ->
-                    lifecycleScope.launch { languageViewModel.userSettings.saveSettingsData(state) }
-                }
-            }
             val setAnimateState : (AnimateState) -> Unit = remember {
                 { state: AnimateState ->
                     lifecycleScope.launch { languageViewModel.setAnimateState(state) }
@@ -136,7 +131,8 @@ class MainActivity : ComponentActivity() {
                             testList = testListState,
                             getTestResults = languageViewModel::getTestResults,
                             onDataAction = languageViewModel::onDataAction,
-                            navigateTo = navigateTo
+                            navigateTo = navigateTo,
+                            editingVocabState = languageViewModel.editingVocab
                         )
                     }
                 ),
@@ -148,6 +144,7 @@ class MainActivity : ComponentActivity() {
                             onDataAction = languageViewModel::onDataAction,
                             navigateTo = navigateTo,
                             navigateBack = navigateBack,
+                            editingVocab = languageViewModel.editingVocab.value
                         )
                     }
                 )

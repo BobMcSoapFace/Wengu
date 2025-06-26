@@ -64,7 +64,8 @@ fun <T> ListSelection(
     textColor : Color = MaterialTheme.colorScheme.onPrimary,
     onButtonColor : Color = textColor,
     onTextColor : Color = buttonColor,
-    toString : (T) -> String = {it.toString()}
+    toString : (T) -> String = {it.toString()},
+    limit : Int = -1
 ){
 
     val isSelected = remember {mutableStateOf(false)}
@@ -146,7 +147,7 @@ fun <T> ListSelection(
                     )
                 }
             }
-            if((list.value - selected.value.toSet()).isNotEmpty()){
+            if((list.value - selected.value.toSet()).isNotEmpty() && (limit < 0 || (selected.value.size<limit))){
                 val addScope = rememberCoroutineScope()
                 val curAnimateState = AnimateState.localAnimateState.current
                 Box(

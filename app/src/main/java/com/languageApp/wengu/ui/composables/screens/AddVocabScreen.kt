@@ -2,7 +2,6 @@ package com.languageApp.wengu.ui.composables.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,26 +14,31 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.languageApp.wengu.data.DataAction
-import com.languageApp.wengu.data.DataEntry
-import com.languageApp.wengu.data.TestResult
 import com.languageApp.wengu.data.Vocab
+import com.languageApp.wengu.data.settings.UserSettings
+import com.languageApp.wengu.data.settings.UserSettingsData
+import com.languageApp.wengu.modules.SnackbarEvent
 import com.languageApp.wengu.ui.InteractableIcon
 import com.languageApp.wengu.ui.WindowInfo
 import com.languageApp.wengu.ui.composables.units.buttons.FieldSelection
 import com.languageApp.wengu.ui.composables.units.buttons.IconButton
 import com.languageApp.wengu.ui.composables.units.buttons.ListSelection
 import com.languageApp.wengu.ui.localWindowInfo
-import kotlinx.serialization.json.Json
+import com.languageApp.wengu.ui.theme.DebugState
+import kotlinx.coroutines.launch
+import java.time.Instant
 
 @Composable
 fun AddVocabScreen(
@@ -42,6 +46,7 @@ fun AddVocabScreen(
     onDataAction : (DataAction) -> Unit,
     navigateTo : (String) -> Unit,
     navigateBack : () -> Unit,
+    editingVocab : Vocab? = null,
 ){
     @Composable
     fun Divider(){
@@ -68,9 +73,17 @@ fun AddVocabScreen(
             )
         }
     }
-    val vocabName = rememberSaveable{ mutableStateOf("") }
-    val pronunciation = rememberSaveable{ mutableStateOf("") }
-    val translation = rememberSaveable{ mutableStateOf("") }
+    val userSettings = UserSettings.localSettings.current
+    val coroutineScope = rememberCoroutineScope()
+    val vocabName = rememberSaveable{ mutableStateOf(editingVocab?.vocab ?: "") }
+    val pronunciation = rememberSaveable{ mutableStateOf(editingVocab?.pronunciation ?:"") }
+    val translation = rememberSaveable{ mutableStateOf(editingVocab?.translation ?:"") }
+    val typeList = rememberSaveable { mutableStateOf(userSettings.types.split(Vocab.TYPE_DELIMITER).map { it -> it.lowercase().replaceFirstChar{ it.uppercaseChar() }}) }
+    val languageList = rememberSaveable { mutableStateOf(userSettings.languages.split(Vocab.LANGUAGES_DELIMITER).map { it -> it.lowercase().replaceFirstChar{ it.uppercaseChar() }}) }
+    val typesSelected = rememberSaveable { mutableStateOf(
+        editingVocab?.type?.split(Vocab.TYPE_DELIMITER) ?: listOf())}
+    val languageSelected = rememberSaveable { mutableStateOf(
+        editingVocab?.vocabLanguage?.split(Vocab.LANGUAGES_DELIMITER) ?: listOf())}
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -117,16 +130,15 @@ fun AddVocabScreen(
                 )
                 Footnote("the definition when translated - \"${translation.value}\"")
                 Divider()
-                val testList = rememberSaveable { mutableStateOf(listOf("item1", "item2", "item3")) }
-                val testSelected = rememberSaveable { mutableStateOf(testList.value) }
                 ListSelection(
-                    list = testList,
-                    selected = testSelected,
+                    label = "Type",
+                    list = typeList,
+                    selected = typesSelected,
                     onClick = {
-                        testSelected.value -= it
+                        typesSelected.value -= it
                               },
                     onSelect = {
-                        testSelected.value += (it)
+                        typesSelected.value += (it)
                     },
                     buttonColor = MaterialTheme.colorScheme.secondary,
                     textColor = MaterialTheme.colorScheme.onSecondary,
@@ -134,6 +146,25 @@ fun AddVocabScreen(
                     width = localWindowInfo.current.longButtonWidth *
                             (if(localWindowInfo.current.screenHeightInfo == WindowInfo.WindowType.Compact) 3 else 1),
                     modifier = Modifier,
+                )
+                Divider()
+                ListSelection(
+                    label = "Language",
+                    list = languageList,
+                    selected = languageSelected,
+                    onClick = {
+                        languageSelected.value -= it
+                    },
+                    onSelect = {
+                        languageSelected.value += (it)
+                    },
+                    buttonColor = MaterialTheme.colorScheme.secondary,
+                    textColor = MaterialTheme.colorScheme.onSecondary,
+                    height = localWindowInfo.current.longButtonHeight,
+                    width = localWindowInfo.current.longButtonWidth *
+                            (if(localWindowInfo.current.screenHeightInfo == WindowInfo.WindowType.Compact) 3 else 1),
+                    modifier = Modifier,
+                    limit = 1,
                 )
                 Divider()
                 Divider()
@@ -162,7 +193,42 @@ fun AddVocabScreen(
         )
         IconButton(
             iconInteractableIcon = InteractableIcon(
-                function = {},
+                function = {
+                    if(languageSelected.value.isEmpty() || languageSelected.value.first().isEmpty()){
+                        coroutineScope.launch {
+                            SnackbarEvent.sendSnackbarEvent(
+                                SnackbarEvent(
+                                    text = "Vocab must have a language selected.",
+                                    time = SnackbarDuration.Short,
+                                    color = DebugState.SNACKBAR_BACKGROUND.color,
+                                    textColor = DebugState.SNACKBAR_TEXT.color
+                                )
+                            )
+                        }
+                        return@InteractableIcon
+                    }
+                    val newVocab = Vocab(
+                        id = editingVocab?.id ?: 0,
+                        vocab = vocabName.value,
+                        pronunciation = pronunciation.value,
+                        translation = translation.value,
+                        type = typesSelected.value.joinToString(Vocab.TYPE_DELIMITER),
+                        vocabLanguage = languageSelected.value.joinToString(Vocab.LANGUAGES_DELIMITER),
+                        dateCreated = Instant.now().epochSecond
+                    )
+                    onDataAction(DataAction.Upsert(newVocab))
+                    navigateBack()
+                    coroutineScope.launch {
+                        SnackbarEvent.sendSnackbarEvent(
+                            SnackbarEvent(
+                                text = if(editingVocab != null) "Updated vocab!" else "Created vocab!",
+                                time = SnackbarDuration.Short,
+                                color = DebugState.SUCCESS.color,
+                                textColor = DebugState.SNACKBAR_TEXT.color
+                            )
+                        )
+                    }
+                },
                 label = "Add",
                 icon = Icons.Default.Add,
                 color = MaterialTheme.colorScheme.secondary,

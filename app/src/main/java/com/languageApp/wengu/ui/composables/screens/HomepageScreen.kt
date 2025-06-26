@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +57,7 @@ fun HomepageScreen(
     onDataAction : (DataAction) -> Unit,
     getTestResults : suspend (DataEntry) -> List<TestResult>,
     navigateTo : (String) -> Unit,
+    editingVocabState : MutableState<Vocab?>
 ){
     val primary = MaterialTheme.colorScheme.primary
     val onPrimary = MaterialTheme.colorScheme.onPrimary
@@ -105,6 +107,7 @@ fun HomepageScreen(
                     vocabList = vocabList,
                     getTestResults = getTestResults,
                     navigateTo = navigateTo,
+                    editingVocabState = editingVocabState
                 )
             }
             HomepageState.SETTINGS -> {}

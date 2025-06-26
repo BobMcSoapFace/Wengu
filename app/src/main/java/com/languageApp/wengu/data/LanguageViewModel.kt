@@ -1,6 +1,8 @@
 package com.languageApp.wengu.data
 
 import android.app.Application
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,6 +60,7 @@ class LanguageViewModel(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000), Sort()
     )
+    val editingVocab : MutableState<Vocab?> = mutableStateOf(null)
 
     suspend fun setAnimateState(animateState: AnimateState){
         _animateState.emit(animateState)

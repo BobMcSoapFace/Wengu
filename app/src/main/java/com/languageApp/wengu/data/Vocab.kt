@@ -26,7 +26,8 @@ data class Vocab(
         return this.type.split(TYPE_DELIMITER).map { it.trim().lowercase() } as Set<String>
     }
     companion object {
-        val TYPE_DELIMITER = '/'
+        const val TYPE_DELIMITER = "/"
+        const val LANGUAGES_DELIMITER = "/"
         /**
         * Enumerations used to edit SQL commands to specify specific properties to get/find entries by.
          * @property label Name of property inserted into SQL queries.
