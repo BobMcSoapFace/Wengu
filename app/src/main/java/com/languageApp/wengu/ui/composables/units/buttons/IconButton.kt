@@ -44,15 +44,20 @@ fun IconButton(
     modifier: Modifier,
     expanded : Boolean = false,
     showText : Boolean = true,
-    haveBackgroundBorder : Color? = null
+    buttonColor : Color = MaterialTheme.colorScheme.primary,
+    textColor : Color = MaterialTheme.colorScheme.onPrimary,
+    onButtonColor : Color = textColor,
+    onTextColor : Color = buttonColor,
+    haveBackgroundBorder : Color? = null,
+    iconModifier : Modifier = Modifier
 ){
     var clicked by remember { mutableStateOf(false) }
     val color by animateColorAsState(
-        targetValue = if(clicked) iconInteractableIcon.onColor else iconInteractableIcon.color,
+        targetValue = if(clicked) onButtonColor else buttonColor,
         animationSpec = tween(durationMillis = if(clicked) 2 else 200, easing = LinearEasing), label = "${iconInteractableIcon.label} icon button color"
     )
     val textColor by animateColorAsState(
-        targetValue = if(clicked) iconInteractableIcon.onTextColor else iconInteractableIcon.textColor,
+        targetValue = if(clicked) onTextColor else textColor,
         animationSpec = tween(durationMillis = if(clicked) 2 else 200, easing = LinearEasing), label = "${iconInteractableIcon.label} icon button text color",
         finishedListener = {clicked = false}
     )
@@ -85,7 +90,7 @@ fun IconButton(
             imageVector = iconInteractableIcon.icon,
             contentDescription = iconInteractableIcon.label,
             tint = textColor,
-            modifier = Modifier
+            modifier = iconModifier
                 .fillMaxHeight(if(!expanded) 0.6f else 0.75f)
                 .aspectRatio(1f, true)
                 .align(if(!showText) Alignment.Center else if(!expanded) Alignment.TopCenter else Alignment.CenterStart)

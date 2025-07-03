@@ -1,14 +1,10 @@
 package com.languageApp.wengu.ui.composables.screens
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,50 +17,40 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.languageApp.wengu.data.DataAction
-import com.languageApp.wengu.data.DataEntry
-import com.languageApp.wengu.data.TestResult
+import com.languageApp.wengu.modules.DebugHelper
 import com.languageApp.wengu.data.Vocab
-import com.languageApp.wengu.modules.SnackbarEvent
+import com.languageApp.wengu.modules.DialogPrompt
+import com.languageApp.wengu.modules.DialogPromptType
 import com.languageApp.wengu.ui.InteractableIcon
 import com.languageApp.wengu.ui.WindowInfo
 import com.languageApp.wengu.ui.composables.units.buttons.IconButton
 import com.languageApp.wengu.ui.localWindowInfo
-import com.languageApp.wengu.ui.theme.DebugState
 import kotlinx.coroutines.launch
-import java.time.Clock
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.util.Calendar
-import java.util.Date
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
-@OptIn(ExperimentalTime::class)
 @Composable
 fun VocabScreen(
     vocabList : State<List<Vocab>>,
-    getTestResults : suspend (DataEntry) -> List<TestResult>,
     modifier : Modifier = Modifier,
     navigateTo : (String) -> Unit,
-    editingVocabState : MutableState<Vocab?>
+    editingVocabState : MutableState<Vocab?>,
+    viewingVocabState : MutableState<Vocab?>,
+    onDataAction : (DataAction) -> Unit,
 ){
+    val coroutineScope = rememberCoroutineScope()
     Box(modifier = Modifier.fillMaxSize()){
         LazyColumn(
             modifier = modifier
@@ -74,19 +60,10 @@ fun VocabScreen(
             verticalArrangement = Arrangement.Top
         ) {
             items(vocabList.value, key = { it.id }) { vocab ->
-                var clicked by remember { mutableStateOf(false) }
-                val size by animateDpAsState(
-                    targetValue = if (clicked) localWindowInfo.current.buttonAnimateSize.times(0.5f) else localWindowInfo.current.buttonAnimateSize,
-                    animationSpec = tween(
-                        durationMillis = if (clicked) 10 else 100,
-                        easing = LinearOutSlowInEasing
-                    ), label = "${vocab.vocab} vocab button text color",
-                    finishedListener = { clicked = false }
-                )
                 Box(
                     modifier = Modifier
                         .padding(vertical = localWindowInfo.current.columnItemOffset)
-                        .padding(size)
+                        .padding(localWindowInfo.current.buttonAnimateSize)
                         .fillMaxWidth()
                         .height(localWindowInfo.current.vocabItemHeight)
                         .clip(RoundedCornerShape(localWindowInfo.current.buttonRounding))
@@ -102,10 +79,11 @@ fun VocabScreen(
                         textAlign = TextAlign.Left,
                         color = MaterialTheme.colorScheme.onPrimary,
                         style = localWindowInfo.current.vocabTextStyle,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth(0.675f)
                             .fillMaxHeight(0.6f)
-                            .align(Alignment.TopCenter)
+                            .align(Alignment.TopStart)
                     )
                     Text(
                         text = vocab.pronunciation,
@@ -119,7 +97,7 @@ fun VocabScreen(
                             .align(Alignment.BottomStart)
                     )
                     Text(
-                        text = vocab.translation,//LocalDateTime.ofInstant(java.time.Instant.ofEpochSecond(vocab.dateCreated), ZoneId.systemDefault()).toString().split("T")[0],
+                        text = vocab.translation,
                         textAlign = TextAlign.Right,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSecondary,
@@ -129,6 +107,44 @@ fun VocabScreen(
                             .fillMaxHeight(0.4f)
                             .align(Alignment.BottomEnd)
                     )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.3f)
+                            .fillMaxHeight(0.45f)
+                            .align(Alignment.TopEnd)
+                            .clip(RoundedCornerShape(localWindowInfo.current.buttonRounding))
+                            .background(MaterialTheme.colorScheme.secondary)
+                            .clickable {
+                                viewingVocabState.value = vocab
+                                navigateTo("VocabResults")
+                                coroutineScope.launch {
+                                    DialogPrompt.sendDialog(
+                                        DialogPrompt(
+                                            message = "Generate test vocab results?",
+                                            function = {
+                                                DebugHelper.generateVocabResults(vocab.id).forEach {
+                                                    onDataAction(
+                                                        DataAction.Upsert(it)
+                                                    )
+                                                }
+                                            },
+                                            type = DialogPromptType.CONFIRMATION
+                                        )
+                                    )
+                                }
+                            }
+                            .padding(localWindowInfo.current.slightOffset)
+                    ){
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = vocab.vocab + " test results icon",
+                            tint = MaterialTheme.colorScheme.onSecondary,
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .aspectRatio(1f, true)
+                                .align(Alignment.Center)
+                        )
+                    }
                 }
             }
             item {
@@ -151,6 +167,9 @@ fun VocabScreen(
                 textColor = MaterialTheme.colorScheme.onSecondary,
                 onTextColor = MaterialTheme.colorScheme.primary
             ),
+            buttonColor = MaterialTheme.colorScheme.secondary,
+            textColor = MaterialTheme.colorScheme.onSecondary,
+            onTextColor = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .width(localWindowInfo.current.landscapeButtonWidth)
                 .height(localWindowInfo.current.landscapeButtonHeight)

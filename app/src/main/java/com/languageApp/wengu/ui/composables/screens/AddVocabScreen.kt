@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -28,15 +27,16 @@ import androidx.compose.ui.text.style.TextAlign
 import com.languageApp.wengu.data.DataAction
 import com.languageApp.wengu.data.Vocab
 import com.languageApp.wengu.data.settings.UserSettings
-import com.languageApp.wengu.data.settings.UserSettingsData
 import com.languageApp.wengu.modules.SnackbarEvent
 import com.languageApp.wengu.ui.InteractableIcon
 import com.languageApp.wengu.ui.WindowInfo
+import com.languageApp.wengu.ui.composables.units.Divider
+import com.languageApp.wengu.ui.composables.units.Footnote
 import com.languageApp.wengu.ui.composables.units.buttons.FieldSelection
 import com.languageApp.wengu.ui.composables.units.buttons.IconButton
 import com.languageApp.wengu.ui.composables.units.buttons.ListSelection
 import com.languageApp.wengu.ui.localWindowInfo
-import com.languageApp.wengu.ui.theme.DebugState
+import com.languageApp.wengu.ui.theme.ColorState
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -48,31 +48,6 @@ fun AddVocabScreen(
     navigateBack : () -> Unit,
     editingVocab : Vocab? = null,
 ){
-    @Composable
-    fun Divider(){
-        Box(modifier = Modifier
-            .height(localWindowInfo.current.dividerHeight)
-            .fillMaxWidth())
-    }
-    @Composable
-    fun Footnote(text : String, modifier: Modifier = Modifier){
-        Box(modifier = modifier
-            .fillMaxWidth(1f)
-            .padding(localWindowInfo.current.closeOffset)
-            .height(IntrinsicSize.Max)
-        ){
-            Text(
-                text = text,
-                style = localWindowInfo.current.footnoteTextStyle,
-                color = MaterialTheme.colorScheme.secondary,
-                textAlign = TextAlign.Left,
-                modifier = Modifier.align(
-                    if(localWindowInfo.current.screenHeightInfo != WindowInfo.WindowType.Compact) Alignment.CenterStart
-                    else Alignment.Center
-                )
-            )
-        }
-    }
     val userSettings = UserSettings.localSettings.current
     val coroutineScope = rememberCoroutineScope()
     val vocabName = rememberSaveable{ mutableStateOf(editingVocab?.vocab ?: "") }
@@ -83,7 +58,8 @@ fun AddVocabScreen(
     val typesSelected = rememberSaveable { mutableStateOf(
         editingVocab?.type?.split(Vocab.TYPE_DELIMITER) ?: listOf())}
     val languageSelected = rememberSaveable { mutableStateOf(
-        editingVocab?.vocabLanguage?.split(Vocab.LANGUAGES_DELIMITER) ?: listOf())}
+        editingVocab?.vocabLanguage?.split(Vocab.LANGUAGES_DELIMITER) ?: if(userSettings.defaultLanguage.isNotEmpty()) listOf(userSettings.defaultLanguage) else listOf()
+    )}
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -166,8 +142,7 @@ fun AddVocabScreen(
                     modifier = Modifier,
                     limit = 1,
                 )
-                Divider()
-                Divider()
+                Divider(2)
             }
         }
         IconButton(
@@ -179,6 +154,9 @@ fun AddVocabScreen(
                 textColor = MaterialTheme.colorScheme.onSecondary,
                 onTextColor = MaterialTheme.colorScheme.primary
             ),
+            buttonColor = MaterialTheme.colorScheme.secondary,
+            textColor = MaterialTheme.colorScheme.onSecondary,
+            onTextColor = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .width(localWindowInfo.current.landscapeButtonHeight)
                 .height(localWindowInfo.current.landscapeButtonHeight)
@@ -200,8 +178,8 @@ fun AddVocabScreen(
                                 SnackbarEvent(
                                     text = "Vocab must have a language selected.",
                                     time = SnackbarDuration.Short,
-                                    color = DebugState.SNACKBAR_BACKGROUND.color,
-                                    textColor = DebugState.SNACKBAR_TEXT.color
+                                    color = ColorState.SNACKBAR_BACKGROUND.color,
+                                    textColor = ColorState.SNACKBAR_TEXT.color
                                 )
                             )
                         }
@@ -223,8 +201,8 @@ fun AddVocabScreen(
                             SnackbarEvent(
                                 text = if(editingVocab != null) "Updated vocab!" else "Created vocab!",
                                 time = SnackbarDuration.Short,
-                                color = DebugState.SUCCESS.color,
-                                textColor = DebugState.SNACKBAR_TEXT.color
+                                color = ColorState.SUCCESS.color,
+                                textColor = ColorState.SNACKBAR_TEXT.color
                             )
                         )
                     }
@@ -235,6 +213,9 @@ fun AddVocabScreen(
                 textColor = MaterialTheme.colorScheme.onSecondary,
                 onTextColor = MaterialTheme.colorScheme.primary
             ),
+            buttonColor = MaterialTheme.colorScheme.secondary,
+            textColor = MaterialTheme.colorScheme.onSecondary,
+            onTextColor = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .width(localWindowInfo.current.landscapeButtonWidth)
                 .height(localWindowInfo.current.landscapeButtonHeight)

@@ -13,6 +13,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -20,11 +21,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -38,14 +40,17 @@ import com.languageApp.wengu.data.AppDatabase
 import com.languageApp.wengu.data.LanguageViewModel
 import com.languageApp.wengu.data.Sort
 import com.languageApp.wengu.data.settings.UserSettings
-import com.languageApp.wengu.data.settings.UserSettingsData
 import com.languageApp.wengu.modules.DialogComposable
 import com.languageApp.wengu.modules.DialogPrompt
 import com.languageApp.wengu.modules.SnackbarEvent
 import com.languageApp.wengu.ui.AnimateState
 import com.languageApp.wengu.ui.Screen
+import com.languageApp.wengu.ui.composables.screens.ActiveTestScreen
 import com.languageApp.wengu.ui.composables.screens.AddVocabScreen
 import com.languageApp.wengu.ui.composables.screens.HomepageScreen
+import com.languageApp.wengu.ui.composables.screens.TestCreatorScreen
+import com.languageApp.wengu.ui.composables.screens.TestViewerScreen
+import com.languageApp.wengu.ui.composables.screens.VocabResultsScreen
 import com.languageApp.wengu.ui.composables.units.Overlay
 import com.languageApp.wengu.ui.localWindowInfo
 import com.languageApp.wengu.ui.rememberWindowInfo
@@ -84,6 +89,7 @@ class MainActivity : ComponentActivity() {
 
             val vocabListState = languageViewModel.vocabState.collectAsStateWithLifecycle()
             val testListState = languageViewModel.testState.collectAsStateWithLifecycle()
+            val testResultListState = languageViewModel.testResultsState.collectAsStateWithLifecycle()
             val animationState = languageViewModel.animationState.collectAsStateWithLifecycle()
             val sortTypeState = languageViewModel.sortTypeState.collectAsStateWithLifecycle()
             val dialogState = DialogPrompt.dialogSharedFlow.collectAsStateWithLifecycle(initialValue = null)
@@ -132,7 +138,10 @@ class MainActivity : ComponentActivity() {
                             getTestResults = languageViewModel::getTestResults,
                             onDataAction = languageViewModel::onDataAction,
                             navigateTo = navigateTo,
-                            editingVocabState = languageViewModel.editingVocab
+                            navigateBack = navigateBack,
+                            editingVocabState = languageViewModel.editingVocab,
+                            viewingVocabState = languageViewModel.viewingVocab,
+                            userSettingsData = languageViewModel.userSettings
                         )
                     }
                 ),
@@ -147,14 +156,59 @@ class MainActivity : ComponentActivity() {
                             editingVocab = languageViewModel.editingVocab.value
                         )
                     }
-                )
+                ),
+                Screen(
+                    route = "VocabResults",
+                    screen = {
+                        VocabResultsScreen(
+                            navigateBack = navigateBack,
+                            selectedVocab = languageViewModel.viewingVocab.value,
+                            testResults = testResultListState
+                        )
+                    }
+                ),
+                Screen(
+                    route = "TestCreator",
+                    screen = {
+                        TestCreatorScreen(
+                            navigateUp = navigateBack,
+                            navigateTo = navigateTo,
+                            vocab = vocabListState,
+                            activeTest = languageViewModel.activeTestState,
+                        )
+                    }
+                ),
+                Screen(
+                    route = "ActiveTest",
+                    screen = {
+                        if(languageViewModel.activeTestState.value!=null) {
+                            ActiveTestScreen(
+                                testState = languageViewModel.activeTestState.value!!
+                            )
+                        } else {
+                            Box(modifier = Modifier.fillMaxSize()){
+                                Text(
+                                    text = "Loading test... ",
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    style = localWindowInfo.current.footnoteTextStyle,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                        }
+
+                    }
+                ),
+
             )
             val windowInfo = rememberWindowInfo()
-            WenguTheme(dynamicColor = false) {
+            WenguTheme(darkTheme = when(userSettingsState.value.useDarkMode){
+                1 -> true
+                0 -> false
+                else -> isSystemInDarkTheme()
+            }, dynamicColor = false) {
                 CompositionLocalProvider(
                     localWindowInfo provides windowInfo,
                     UserSettings.localSettings provides userSettingsState.value,
-                    UserSettingsData.localSettingsData provides languageViewModel.userSettings,
                     Sort.localSort provides sortTypeState.value,
                     AnimateState.localAnimateState provides animationState.value
                 ){

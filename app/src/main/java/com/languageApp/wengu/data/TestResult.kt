@@ -14,7 +14,7 @@ data class TestResult(
     val id : Int,
     val dateTaken : Long,
     val correct : Boolean,
-    val secondsTaken : Float,
+    val secondsTaken : Int,
     val vocabId : Int,
     val testId : Int
 ) : DataEntry {
@@ -23,5 +23,12 @@ data class TestResult(
     }
     fun getDate() : Date {
         return Date(dateTaken)
+    }
+    enum class Properties(val label : String){
+        ID("id"),
+        DATE("dateTaken"),
+        SECONDS("secondsTaken"),
+        TEST("testId"),
+        CORRECT("correct")
     }
 }

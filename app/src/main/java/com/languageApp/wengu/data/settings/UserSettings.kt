@@ -11,6 +11,7 @@ data class UserSettings(
     val languages : String = DEFAULT_LANGUAGES.joinToString(separator = LANGUAGES_DELIMITER),
     val types : String = DEFAULT_TYPES.joinToString(separator = TYPE_DELIMITER.toString()),
     val defaultLanguage : String = "Mandarin",
+    val defaultQuestionCount : Int = 20,
 ) {
 
     companion object {
@@ -19,6 +20,7 @@ data class UserSettings(
         val LANGUAGES_KEY = stringPreferencesKey("Languages")
         val DEFAULT_LANGUAGE_KEY = stringPreferencesKey("DefaultLanguage")
         val TYPES_KEY = stringPreferencesKey("Types")
+        val DEFAULT_QUESTION_COUNT_KEY = intPreferencesKey("DefaultQuestionCount")
 
         val DEFAULT_LANGUAGES = listOf(
             "Mandarin",

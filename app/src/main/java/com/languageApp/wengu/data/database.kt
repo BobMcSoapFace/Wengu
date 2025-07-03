@@ -54,6 +54,13 @@ interface DatabaseDao {
 
     // Test results
     @Transaction
+    @Query("SELECT * FROM TestResult ORDER BY :type ASC")
+    fun getTestResultsAsc(type : String): Flow<List<TestResult>>
+    @Transaction
+    @Query("SELECT * FROM TestResult ORDER BY :type DESC")
+    fun getTestResultsDesc(type : String): Flow<List<TestResult>>
+
+    @Transaction
     @Query("SELECT * FROM TestResult WHERE vocabId LIKE :vocabId")
     fun findTestResultsByVocabId(vocabId : Int): Flow<List<TestResult>>
     @Transaction
@@ -72,7 +79,7 @@ interface DatabaseDao {
 }
 @Database(
     entities = [Vocab::class, TestResult::class, Test::class],
-    version = 1, //increase when database entities change
+    version = 2, //increase when database entities change
     exportSchema = true,
     /*autoMigrations = [
         AutoMigration (from = 3, to = 4)

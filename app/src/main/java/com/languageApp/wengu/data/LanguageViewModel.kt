@@ -2,6 +2,7 @@ package com.languageApp.wengu.data
 
 import android.app.Application
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -43,11 +44,21 @@ class LanguageViewModel(
             SortType.Test.DATE -> db.dao.getTestDesc(type = Test.Properties.DATE.label)
         }
     }
+    private val _testResults : Flow<List<TestResult>> = _testSortType.flatMapLatest {
+        when(_testResultSortType.value) {
+            SortType.TestResult.BY_TEST -> db.dao.getTestResultsDesc(type = TestResult.Properties.TEST.label)
+            SortType.TestResult.SECONDS_TAKEN -> db.dao.getTestResultsDesc(type = TestResult.Properties.SECONDS.label)
+            SortType.TestResult.ID -> db.dao.getTestResultsDesc(type = TestResult.Properties.ID.label)
+            else -> db.dao.getTestResultsDesc(type = TestResult.Properties.DATE.label)
+        }
+    }
+    val activeTestState : MutableState<TestState?> = mutableStateOf(null)
     val userSettings: UserSettingsData = UserSettingsData(application.applicationContext)
     val userSettingsState = userSettings.getSettingsData().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserSettings())
     val animationState =_animateState.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AnimateState())
     val vocabState = _vocab.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf())
     val testState = _tests.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf())
+    val testResultsState = _testResults.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf())
     val sortTypeState = _testResultSortType.combine(_testSortType){testResult, test ->
         Sort(
             vocabSortType = SortType.Vocab.DATE,
@@ -61,6 +72,7 @@ class LanguageViewModel(
         SharingStarted.WhileSubscribed(5000), Sort()
     )
     val editingVocab : MutableState<Vocab?> = mutableStateOf(null)
+    val viewingVocab : MutableState<Vocab?> = mutableStateOf(null)
 
     suspend fun setAnimateState(animateState: AnimateState){
         _animateState.emit(animateState)

@@ -25,6 +25,7 @@ class UserSettingsData(private val context : Context?) {
             it[UserSettings.LANGUAGES_KEY] = settings.languages
             it[UserSettings.TYPES_KEY] = settings.types
             it[UserSettings.DEFAULT_LANGUAGE_KEY] = settings.defaultLanguage
+            it[UserSettings.DEFAULT_QUESTION_COUNT_KEY] = settings.defaultQuestionCount
         }
     }
     fun getSettingsData() : Flow<UserSettings> = context!!.settingsDataStore.data.map {
@@ -33,9 +34,7 @@ class UserSettingsData(private val context : Context?) {
             languages = it[UserSettings.LANGUAGES_KEY] ?: DEFAULT_LANGUAGES.joinToString(separator = LANGUAGES_DELIMITER),
             types = it[UserSettings.TYPES_KEY] ?: DEFAULT_TYPES.joinToString(separator = TYPE_DELIMITER.toString()),
             defaultLanguage = it[UserSettings.DEFAULT_LANGUAGE_KEY] ?: "Mandarin",
+            defaultQuestionCount = it[UserSettings.DEFAULT_QUESTION_COUNT_KEY] ?: 20
         )
-    }
-    companion object {
-        val localSettingsData : ProvidableCompositionLocal<UserSettingsData> = compositionLocalOf { UserSettingsData(null) }
     }
 }

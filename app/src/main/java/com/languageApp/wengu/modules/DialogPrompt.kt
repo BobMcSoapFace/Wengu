@@ -1,20 +1,10 @@
 package com.languageApp.wengu.modules
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,6 +40,7 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import com.languageApp.wengu.modules.DialogPrompt.Companion.DIALOG_FUNCTION_DELAY
 import com.languageApp.wengu.ui.AnimateState
 import com.languageApp.wengu.ui.WindowInfo
+import com.languageApp.wengu.ui.composables.units.buttons.FieldSelection
 import com.languageApp.wengu.ui.localWindowInfo
 import com.languageApp.wengu.ui.theme.descriptionText
 import com.languageApp.wengu.ui.theme.moduleLabel
@@ -82,8 +71,10 @@ interface DialogPromptType {
         val selectItem : (String) -> Unit // serialized version of object of T type
     ) : DialogPromptType
     data object NOTICE : DialogPromptType
+    data object FIELD_SELECTION : DialogPromptType
 }
 
+// old code thats freakishly inefficient but I have to live with my choices
 @Composable
 fun DialogComposable(
     windowInfo: WindowInfo,
@@ -92,6 +83,7 @@ fun DialogComposable(
 ){
     val shown = rememberSaveable { mutableStateOf(false) }
     val animateState = AnimateState.localAnimateState.current
+    val typedText = rememberSaveable { mutableStateOf("") }
     LaunchedEffect(key1 = true) {
         shown.value = true
     }
@@ -166,20 +158,25 @@ fun DialogComposable(
                             .fillMaxWidth()
                             .padding(localWindowInfo.current.closeOffset)
                             .clip(RoundedCornerShape(localWindowInfo.current.buttonRounding))
-                            .border(2.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(
-                                localWindowInfo.current.buttonRounding))
+                            .border(
+                                2.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(
+                                    localWindowInfo.current.buttonRounding
+                                )
+                            )
                             .padding(2.dp)
                     ){
                         if(dialogState.value != null)
-                        itemsIndexed((dialogState.value!!.type as DialogPromptType.LIST_SELECTION).list){ i, item ->
+                        itemsIndexed((dialogState.value!!.type as DialogPromptType.LIST_SELECTION).list, key={i, item -> item.hashCode()}){ i, item ->
                             var clicked by remember {mutableStateOf(false)}
                             Box(
                                 modifier = Modifier
                                     .height(localWindowInfo.current.dialogListItemHeight)
                                     .fillMaxWidth()
-                                    .clickable{
+                                    .clickable {
                                         clicked = true
-                                        (dialogState.value!!.type as DialogPromptType.LIST_SELECTION).selectItem(item)
+                                        (dialogState.value!!.type as DialogPromptType.LIST_SELECTION).selectItem(
+                                            item
+                                        )
                                         AnimateState.setAnimateState(
                                             animateState.copy(
                                                 overlayVisibility = 0f
@@ -209,7 +206,7 @@ fun DialogComposable(
                                             else 0.dp,
                                         )
                                     )
-                                    .background(if(!clicked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary)
+                                    .background(if (!clicked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary)
                             ){
                                 Text(
                                     text = item.toString(),
@@ -220,6 +217,20 @@ fun DialogComposable(
                             }
                         }
                     }
+                } else if(dialogState.value!!.type is DialogPromptType.FIELD_SELECTION){
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(localWindowInfo.current.closeOffset)
+                    ){
+                        FieldSelection(
+                            inputValue = typedText.value,
+                            onInputChange = {typedText.value = it},
+                            buttonColor = MaterialTheme.colorScheme.secondary,
+                            textColor = MaterialTheme.colorScheme.onSecondary,
+                            noLabel = true
+                        )
+                    }
                 }
                 Box(
                     Modifier
@@ -227,68 +238,15 @@ fun DialogComposable(
                         .height(windowInfo.getMinTimes(0.35f))
                         .padding(windowInfo.getMinTimes(0.02f))
                 ) {
-                    when (dialogState.value!!.type) {
-                        is DialogPromptType.CONFIRMATION -> {
-                            repeat(2) {
-                                Box(Modifier
-                                    .fillMaxWidth(0.485f)
-                                    .fillMaxHeight()
-                                    .align(
-                                        if (it == 0) Alignment.CenterStart
-                                        else Alignment.CenterEnd
-                                    )
-                                    .clip(
-                                        RoundedCornerShape(
-                                            windowInfo.getMinTimes(
-                                                0.035f
-                                            )
-                                        )
-                                    )
-                                    .clickable {
-                                        if (it == 1) {
-                                            dialogState.value!!.function(
-                                                ""
-                                            )
-                                        }
-                                        AnimateState.setAnimateState(
-                                            animateState.copy(
-                                                overlayVisibility = 0f
-                                            )
-                                        )
-                                        lifecycle.launch {
-                                            shown.value = false
-                                            delay(DIALOG_FUNCTION_DELAY)
-                                            DialogPrompt.sendDialog(
-                                                null
-                                            )
-                                        }
-                                    }
-                                    .padding(
-                                        windowInfo.getMinTimes(
-                                            0.0325f
-                                        )
-                                    ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = if (it == 0) "Cancel" else dialogState.value!!.confirmLabel,
-                                        style = moduleLabel + TextStyle(
-                                            color =
-                                            MaterialTheme.colorScheme.onPrimary,
-                                            textAlign = TextAlign.Center,
-                                            fontSize = windowInfo.getMinTimes(
-                                                0.04f
-                                            ).value.sp
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                        is DialogPromptType.NOTICE -> {
+                    if (dialogState.value!!.type is DialogPromptType.CONFIRMATION || dialogState.value!!.type is DialogPromptType.FIELD_SELECTION) {
+                        repeat(2) {
                             Box(Modifier
-                                .fillMaxSize()
+                                .fillMaxWidth(0.485f)
                                 .fillMaxHeight()
-                                .align(Alignment.Center)
+                                .align(
+                                    if (it == 0) Alignment.CenterStart
+                                    else Alignment.CenterEnd
+                                )
                                 .clip(
                                     RoundedCornerShape(
                                         windowInfo.getMinTimes(
@@ -297,9 +255,17 @@ fun DialogComposable(
                                     )
                                 )
                                 .clickable {
-                                    dialogState.value!!.function(
-                                        ""
-                                    )
+                                    if (it == 1) {
+                                        if (dialogState.value!!.type == DialogPromptType.FIELD_SELECTION) {
+                                            dialogState.value!!.function(
+                                                typedText.value
+                                            )
+                                        } else {
+                                            dialogState.value!!.function(
+                                                ""
+                                            )
+                                        }
+                                    }
                                     AnimateState.setAnimateState(
                                         animateState.copy(
                                             overlayVisibility = 0f
@@ -315,25 +281,67 @@ fun DialogComposable(
                                 }
                                 .padding(
                                     windowInfo.getMinTimes(
-                                        0.0325f
+                                        0.01f
                                     )
                                 ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = dialogState.value!!.confirmLabel,
-                                    style = moduleLabel + TextStyle(
-                                        color =
-                                        MaterialTheme.colorScheme.onPrimary,
-                                        textAlign = TextAlign.Center,
-                                        fontSize = windowInfo.getMinTimes(
-                                            0.04f
-                                        ).value.sp
-                                    )
+                                    text = if (it == 0) "Cancel" else dialogState.value!!.confirmLabel,
+                                    style = localWindowInfo.current.buttonTextStyle,
+                                    color = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         }
-                        else -> {}
+                    }
+                    else if (dialogState.value!!.type is DialogPromptType.NOTICE) {
+                        Box(Modifier
+                            .fillMaxSize()
+                            .fillMaxHeight()
+                            .align(Alignment.Center)
+                            .clip(
+                                RoundedCornerShape(
+                                    windowInfo.getMinTimes(
+                                        0.035f
+                                    )
+                                )
+                            )
+                            .clickable {
+                                dialogState.value!!.function(
+                                    ""
+                                )
+                                AnimateState.setAnimateState(
+                                    animateState.copy(
+                                        overlayVisibility = 0f
+                                    )
+                                )
+                                lifecycle.launch {
+                                    shown.value = false
+                                    delay(DIALOG_FUNCTION_DELAY)
+                                    DialogPrompt.sendDialog(
+                                        null
+                                    )
+                                }
+                            }
+                            .padding(
+                                windowInfo.getMinTimes(
+                                    0.0325f
+                                )
+                            ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = dialogState.value!!.confirmLabel,
+                                style = moduleLabel + TextStyle(
+                                    color =
+                                    MaterialTheme.colorScheme.onPrimary,
+                                    textAlign = TextAlign.Center,
+                                    fontSize = windowInfo.getMinTimes(
+                                        0.04f
+                                    ).value.sp
+                                )
+                            )
+                        }
                     }
                 }
             }

@@ -1,21 +1,15 @@
 package com.languageApp.wengu.ui
 
 import android.content.res.Configuration
-import android.widget.GridLayout.Spec
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
-import androidx.paging.Config
 import com.languageApp.wengu.ui.theme.descriptionText
-import com.languageApp.wengu.ui.theme.moduleLabel
 import com.languageApp.wengu.ui.theme.moduleLabelBold
 
 @Composable
@@ -49,6 +43,11 @@ data class WindowInfo(
         WindowType.Medium -> 12.dp
         WindowType.Expanded -> 20.dp
     }
+    val slightOffset : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 2.dp
+        WindowType.Medium -> 4.dp
+        WindowType.Expanded -> 7.dp
+    }
     val columnItemOffset : Dp = when(screenHeightInfo){
         WindowType.Compact -> 2.dp
         WindowType.Medium -> 4.dp
@@ -68,6 +67,11 @@ data class WindowInfo(
         WindowType.Compact -> 2.dp
         WindowType.Medium -> 4.dp
         WindowType.Expanded -> 8.dp
+    }
+    val testRounding : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 8.dp
+        WindowType.Medium -> 14.dp
+        WindowType.Expanded -> 22.dp
     }
     val buttonRounding : Int = when(screenHeightInfo){
         WindowType.Compact -> 15
@@ -129,6 +133,26 @@ data class WindowInfo(
         WindowType.Medium -> 40.dp
         WindowType.Expanded -> 50.dp
     }
+    val testResultIndicatorSize : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 12.dp
+        WindowType.Medium -> 20.dp
+        WindowType.Expanded -> 28.dp
+    }
+    val testResultIndicatorPadding : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 2.dp
+        WindowType.Medium -> 4.dp
+        WindowType.Expanded -> 6.dp
+    }
+    val counterButtonSize : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 26.dp
+        WindowType.Medium -> 34.dp
+        WindowType.Expanded -> 48.dp
+    }
+    val quizButtonHeight : Dp = when(screenHeightInfo){
+        WindowType.Compact -> 60.dp
+        WindowType.Medium -> 120.dp
+        WindowType.Expanded -> 180.dp
+    }
 
     // Text styles
     val buttonTextSize : Int = when(screenHeightInfo){
@@ -141,19 +165,37 @@ data class WindowInfo(
         WindowType.Medium -> 24
         WindowType.Expanded -> 30
     }
+    private val titleTextSize : Int = when(screenHeightInfo){
+        WindowType.Compact -> 20
+        WindowType.Medium -> 28
+        WindowType.Expanded -> 40
+    }
+    private val quizTextSize : Int = when(screenHeightInfo){
+        WindowType.Compact -> 20
+        WindowType.Medium -> 25
+        WindowType.Expanded -> 35
+    }
     private val vocabTextSize : Int = when(screenHeightInfo){
         WindowType.Compact -> 18
         WindowType.Medium -> 24
         WindowType.Expanded -> 32
+    }
+    private val fieldTextSize : Int = when(screenHeightInfo){
+        WindowType.Compact -> 15
+        WindowType.Medium -> 20
+        WindowType.Expanded -> 27
     }
     private val footnoteTextSize : Int = when(screenHeightInfo){
         WindowType.Compact -> 10
         WindowType.Medium -> 11
         WindowType.Expanded -> 15
     }
+
     val buttonTextStyle : TextStyle = moduleLabelBold + TextStyle(fontSize = buttonTextSize.sp)
+    val titleTextStyle : TextStyle = moduleLabelBold + TextStyle(fontSize = titleTextSize.sp)
     val vocabTextStyle : TextStyle = moduleLabelBold + TextStyle(fontSize = vocabTextSize.sp)
-    val fieldLabeltextStyle = vocabTextStyle + TextStyle()
+    val quizTextStyle : TextStyle = moduleLabelBold + TextStyle(fontSize = quizTextSize.sp)
+    val fieldLabeltextStyle = vocabTextStyle + TextStyle(fontSize = fieldTextSize.sp)
     val footnoteTextStyle : TextStyle = descriptionText + TextStyle(fontSize = footnoteTextSize.sp)
 
 

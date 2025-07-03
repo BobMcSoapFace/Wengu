@@ -20,4 +20,9 @@ data class Test(
         LANGUAGE("language"),
         DATE("dateTaken")
     }
+    companion object {
+        fun getNextIndex(tests : List<Test>) : Int {
+            return tests.map { it.id }.maxOf{ it } + 1
+        }
+    }
 }

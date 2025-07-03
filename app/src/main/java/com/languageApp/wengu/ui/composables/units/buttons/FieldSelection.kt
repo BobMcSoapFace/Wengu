@@ -54,6 +54,7 @@ fun FieldSelection(
     onButtonColor : Color = textColor,
     onTextColor : Color = buttonColor,
     modifier : Modifier = Modifier,
+    noLabel : Boolean = false
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isSelected = interactionSource.collectIsFocusedAsState()
@@ -79,20 +80,25 @@ fun FieldSelection(
             .padding(localWindowInfo.current.buttonAnimateSize)
             .clip(RoundedCornerShape(localWindowInfo.current.buttonRounding.dp))
             .background(backgroundColorAnimValue.value)
-            .padding(horizontal = localWindowInfo.current.closeOffset, vertical = localWindowInfo.current.closeOffset/2)
+            .padding(
+                horizontal = localWindowInfo.current.closeOffset,
+                vertical = localWindowInfo.current.closeOffset / 2
+            )
         , horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ){
-        Text(
-            text = label,
-            color = textColorAnimValue.value,
-            style = localWindowInfo.current.fieldLabeltextStyle,
-            modifier = Modifier.onGloballyPositioned {
-                // Get the height of the Text in Dp
-                textHeightDp = with(localDensity) { it.size.height.toDp() }
-            }
-        )
-        Spacer(Modifier.fillMaxWidth(0.075f))
+        if(!noLabel) {
+            Text(
+                text = label,
+                color = textColorAnimValue.value,
+                style = localWindowInfo.current.fieldLabeltextStyle,
+                modifier = Modifier.onGloballyPositioned {
+                    // Get the height of the Text in Dp
+                    textHeightDp = with(localDensity) { it.size.height.toDp() }
+                }
+            )
+            Spacer(Modifier.fillMaxWidth(0.075f))
+        }
         BasicTextField(
             value = inputValue, onValueChange = {
                 onInputChange(it)

@@ -39,6 +39,7 @@ fun Overlay(
             .then(
                 if (transparency.value > 1) Modifier.clickable(null, null) {
                     coroutineScope.launch {
+                        AnimateState.setAnimateState(animState.copy(overlayVisibility = 0.0f))
                         DialogPrompt.sendDialog(null)
                     }
                 }
