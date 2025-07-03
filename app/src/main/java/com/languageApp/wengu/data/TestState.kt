@@ -7,28 +7,32 @@ data class TestState(
     val vocabs : List<Vocab>,
     val language : String,
     val useRecent : Boolean,
+    val testIndex : Int,
 ){
+    var submittable  = true
     val questions : List<TestQuestion> =
-        if(!useRecent) arrayOfNulls<TestQuestion>(numQuestions).map{ TestQuestion.getTestQuestion(vocabs) }
+        if(!useRecent) TestQuestion.getTestQuestions(pool = vocabs, numQuestions = numQuestions)
         else vocabs.sortedByDescending { it.dateCreated }.take(numQuestions).map { TestQuestion.getTestQuestion(vocabs, it) }
     fun submit(
-        testIndex : Int,
         onDataAction : (DataAction) -> Unit
     ) : Test {
+        submittable = false
         questions.forEach{question ->
             onDataAction(DataAction.Upsert(TestResult(
                 id = 0,
-                dateTaken = question.getTimeFinished(),
-                secondsTaken = (question.getTimeFinished()-question.timeStarted).toInt(),
+                dateTaken = question.getTimeStarted(),
+                secondsTaken = (question.getTimeFinished()-question.getTimeStarted()).toInt(),
                 correct = question.answerIsCorrect(),
                 vocabId = question.vocab.id,
                 testId = testIndex
             )))
         }
-        return Test(
+        val test = Test(
             id = testIndex,
             dateTaken = Instant.now().epochSecond,
             language = questions.first().vocab.vocabLanguage
         )
+        onDataAction(DataAction.Upsert(test))
+        return test
     }
 }

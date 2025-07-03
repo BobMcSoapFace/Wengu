@@ -86,6 +86,11 @@ fun DialogComposable(
     val typedText = rememberSaveable { mutableStateOf("") }
     LaunchedEffect(key1 = true) {
         shown.value = true
+        AnimateState.setAnimateState(
+            animateState.copy(
+                overlayVisibility = 0.3f
+            )
+        )
     }
     Box(modifier =
     Modifier
@@ -209,7 +214,7 @@ fun DialogComposable(
                                     .background(if (!clicked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary)
                             ){
                                 Text(
-                                    text = item.toString(),
+                                    text = item,
                                     color = if(clicked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary,
                                     style = localWindowInfo.current.buttonTextStyle,
                                     modifier = Modifier.align(Alignment.Center)
@@ -255,6 +260,11 @@ fun DialogComposable(
                                     )
                                 )
                                 .clickable {
+                                    AnimateState.setAnimateState(
+                                        animateState.copy(
+                                            overlayVisibility = 0f
+                                        )
+                                    )
                                     if (it == 1) {
                                         if (dialogState.value!!.type == DialogPromptType.FIELD_SELECTION) {
                                             dialogState.value!!.function(
@@ -266,11 +276,6 @@ fun DialogComposable(
                                             )
                                         }
                                     }
-                                    AnimateState.setAnimateState(
-                                        animateState.copy(
-                                            overlayVisibility = 0f
-                                        )
-                                    )
                                     lifecycle.launch {
                                         shown.value = false
                                         delay(DIALOG_FUNCTION_DELAY)

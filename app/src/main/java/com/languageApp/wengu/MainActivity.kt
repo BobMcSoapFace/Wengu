@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
         )
-            .fallbackToDestructiveMigration()
+            //.fallbackToDestructiveMigration()
             /*
             * ^ use if 1. altering database columns/tables AND 2. don't need data to migrate
             */
@@ -102,14 +102,14 @@ class MainActivity : ComponentActivity() {
             }
             val navigateTo : (route : String) -> Unit = remember {
                 {
-                    setAnimateState(animationState.value.copy(overlayVisibility = 0f))
                     navController.navigate(route = it)
+                    setAnimateState(animationState.value.copy(overlayVisibility = 0f))
                 }
             }
             val navigateBack : () -> Unit = remember {
                 {
-                    setAnimateState(animationState.value.copy(overlayVisibility = 0f))
                     navController.navigateUp()
+                    setAnimateState(animationState.value.copy(overlayVisibility = 0f))
                 }
             }
 
@@ -175,6 +175,7 @@ class MainActivity : ComponentActivity() {
                             navigateTo = navigateTo,
                             vocab = vocabListState,
                             activeTest = languageViewModel.activeTestState,
+                            tests = testListState,
                         )
                     }
                 ),
@@ -183,7 +184,9 @@ class MainActivity : ComponentActivity() {
                     screen = {
                         if(languageViewModel.activeTestState.value!=null) {
                             ActiveTestScreen(
-                                testState = languageViewModel.activeTestState.value!!
+                                testState = languageViewModel.activeTestState.value!!,
+                                navigateUp = navigateBack,
+                                onDataAction = languageViewModel::onDataAction
                             )
                         } else {
                             Box(modifier = Modifier.fillMaxSize()){
@@ -248,9 +251,9 @@ class MainActivity : ComponentActivity() {
                                                 .background(MaterialTheme.colorScheme.background)
                                         ) {
                                             entry.screen()
-                                            Overlay()
                                             //shows dialog if dialog exists
                                             if (dialogState.value != null) {
+                                                Overlay()
                                                 DialogComposable(
                                                     windowInfo = windowInfo,
                                                     dialogState = dialogState,

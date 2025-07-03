@@ -46,7 +46,6 @@ inline fun <reified T>ListManager(
     listColor : Color = textColor,
     listTextColor : Color = buttonColor,
 ){
-    val animState = AnimateState.localAnimateState.current
     Box(
         modifier = modifier
             .padding(localWindowInfo.current.buttonAnimateSize)
@@ -140,14 +139,10 @@ inline fun <reified T>ListManager(
                         .background(listColor)
                         .clickable {
                             addScope.launch {
-                                AnimateState.setAnimateState(animState.copy(overlayVisibility = 0.3f))
                                 DialogPrompt.sendDialog(
                                     DialogPrompt(
                                         message = dialogMessage,
-                                        function = {
-                                            add(it)
-                                            AnimateState.setAnimateState(animState.copy(overlayVisibility = 0f))
-                                                   },
+                                        function = { add(it) },
                                         type = DialogPromptType.FIELD_SELECTION
                                     )
                                 )

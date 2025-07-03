@@ -27,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import com.languageApp.wengu.data.Test
 import com.languageApp.wengu.data.TestQuestion
 import com.languageApp.wengu.data.TestState
 import com.languageApp.wengu.data.Vocab
@@ -47,6 +48,7 @@ import kotlinx.coroutines.launch
 fun TestCreatorScreen(
     vocab : State<List<Vocab>>,
     navigateTo : (String) -> Unit,
+    tests : State<List<Test>>,
     navigateUp : () -> Unit,
     activeTest : MutableState<TestState?>
 ){
@@ -139,7 +141,8 @@ fun TestCreatorScreen(
                             numQuestions = numQuestions.intValue,
                             vocabs = applicableVocabs,
                             language = languageType.value,
-                            useRecent = quizRecentVocab.value
+                            useRecent = quizRecentVocab.value,
+                            testIndex = Test.getNextIndex(tests.value),
                         )
                         navigateTo("ActiveTest")
                     } else {

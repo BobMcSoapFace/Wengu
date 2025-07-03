@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,15 +30,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.languageApp.wengu.data.DataAction
+import com.languageApp.wengu.data.Test
 import com.languageApp.wengu.data.TestQuestion
 import com.languageApp.wengu.data.TestState
+import com.languageApp.wengu.modules.DialogPrompt
+import com.languageApp.wengu.modules.DialogPromptType
 import com.languageApp.wengu.modules.SnackbarEvent
+import com.languageApp.wengu.ui.AnimateState
 import com.languageApp.wengu.ui.InteractableIcon
 import com.languageApp.wengu.ui.WindowInfo
 import com.languageApp.wengu.ui.composables.units.Divider
@@ -45,14 +52,19 @@ import com.languageApp.wengu.ui.composables.units.Separator
 import com.languageApp.wengu.ui.composables.units.buttons.IconButton
 import com.languageApp.wengu.ui.composables.units.buttons.ToggleButton
 import com.languageApp.wengu.ui.localWindowInfo
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ActiveTestScreen(
-    testState : TestState
+    testState : TestState,
+    onDataAction : (DataAction) -> Unit,
+    navigateUp : () -> Unit,
 ){
+    val coroutineScope = rememberCoroutineScope()
     val pagingState = rememberPagerState(initialPage = 0) { testState.numQuestions }
+    val animateState = AnimateState.localAnimateState.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -73,14 +85,91 @@ fun ActiveTestScreen(
                     .fillMaxSize()
             ) {
                 val testQuestion = remember { mutableStateOf(testState.questions[it]) }
+                LaunchedEffect(key1 = true) {
+                    testQuestion.value.start()
+                }
                 when(testQuestion.value){
                     is TestQuestion.TrueFalse -> {
-                        Text(
-                            text = "TrueFalse Question ",
-                            color = MaterialTheme.colorScheme.onBackground,
-                            style = localWindowInfo.current.footnoteTextStyle,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                        val verticalScrollState = rememberScrollState()
+                        val curAnswerSelected = remember { mutableStateOf((testQuestion.value as TestQuestion.TrueFalse).entry) }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ){
+                            Text(
+                                text = testQuestion.value.vocab.vocab,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                style = localWindowInfo.current.quizTextStyle,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(localWindowInfo.current.screenPadding)
+                            )
+                            Text(
+                                text = when (testQuestion.value.type) {
+                                    TestQuestion.AnswerType.TRANSLATION -> "translation -> ${(testQuestion.value as TestQuestion.TrueFalse).other.translation}"
+                                    TestQuestion.AnswerType.PRONUNCIATION -> "pronunciation -> ${(testQuestion.value as TestQuestion.TrueFalse).other.pronunciation}"
+                                },
+                                color = MaterialTheme.colorScheme.onBackground,
+                                style = localWindowInfo.current.footnoteTextStyle,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(localWindowInfo.current.screenPadding)
+                            )
+                            Divider()
+                            Separator(color = MaterialTheme.colorScheme.onBackground)
+                            Divider()
+                            FlowRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight()
+                                    .verticalScroll(verticalScrollState)
+                                , horizontalArrangement = Arrangement.Center
+                            ) {
+                                val falseSelected = remember {
+                                    mutableStateOf(curAnswerSelected.value == false)
+                                }
+                                val trueSelected = remember {
+                                    mutableStateOf(curAnswerSelected.value == true)
+                                }
+                                LaunchedEffect(key1 = curAnswerSelected.value) {
+                                    falseSelected.value = curAnswerSelected.value == false
+                                    trueSelected.value = curAnswerSelected.value == true
+                                }
+
+                                ToggleButton(
+                                    label = "True",
+                                    boolValue = trueSelected,
+                                    onClick = {
+                                        curAnswerSelected.value = true
+                                        (testQuestion.value as TestQuestion.TrueFalse).entry = true
+                                        testQuestion.value.finish()
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.45f)
+                                        .height(localWindowInfo.current.quizButtonHeight)
+                                        .padding(localWindowInfo.current.closeOffset),
+                                    border = true
+                                )
+                                ToggleButton(
+                                    label = "False",
+                                    boolValue = falseSelected,
+                                    onClick = {
+                                        curAnswerSelected.value = false
+                                        (testQuestion.value as TestQuestion.TrueFalse).entry = false
+                                        testQuestion.value.finish()
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.45f)
+                                        .height(localWindowInfo.current.quizButtonHeight)
+                                        .padding(localWindowInfo.current.closeOffset),
+                                    border = true
+                                )
+                            }
+                            Divider(4)
+                        }
                     }
                     is TestQuestion.MultipleChoice -> {
                         val verticalScrollState = rememberScrollState()
@@ -141,6 +230,7 @@ fun ActiveTestScreen(
                                         onClick = {
                                             curAnswerSelected.value = choice
                                             (testQuestion.value as TestQuestion.MultipleChoice).entry = choice
+                                            testQuestion.value.finish()
                                         },
                                         modifier = Modifier
                                             .fillMaxWidth(0.45f)
@@ -168,7 +258,22 @@ fun ActiveTestScreen(
             IconButton(
                 iconInteractableIcon = InteractableIcon(
                     function = {
-
+                        coroutineScope.launch {
+                            DialogPrompt.sendDialog(
+                                DialogPrompt(
+                                    type = DialogPromptType.CONFIRMATION,
+                                    message = "Submit test?",
+                                    function = {
+                                        if(!testState.submittable){
+                                            return@DialogPrompt
+                                        }
+                                        testState.submit(onDataAction)
+                                        navigateUp()
+                                    },
+                                    confirmLabel = "Submit"
+                                )
+                            )
+                        }
                     },
                     label = "Submit",
                     icon = Icons.Default.PlayArrow,

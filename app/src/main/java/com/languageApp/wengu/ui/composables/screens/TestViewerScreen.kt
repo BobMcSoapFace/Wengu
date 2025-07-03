@@ -65,7 +65,7 @@ fun TestViewerScreen(
         modifier = Modifier
             .fillMaxSize()
     ){
-
+        if(tests.value.isNotEmpty())
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -190,7 +190,7 @@ fun TestViewerScreen(
                                     .align(Alignment.CenterStart)
                             )
                             Text(
-                                text = "${timeTaken.intValue/60}m",
+                                text = if(timeTaken.intValue/60 >= 1)"${timeTaken.intValue/60}m" else "${timeTaken.intValue}s",
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 style = localWindowInfo.current.footnoteTextStyle,
                                 textAlign = TextAlign.Right,
@@ -209,7 +209,7 @@ fun TestViewerScreen(
                                     .align(Alignment.CenterStart)
                             )
                             Text(
-                                text = longestStreak.value.toString(),
+                                text = longestStreak.intValue.toString(),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 style = localWindowInfo.current.footnoteTextStyle,
                                 textAlign = TextAlign.Right,
@@ -243,6 +243,16 @@ fun TestViewerScreen(
                 ScreenPaddingDivider(4)
             }
         }
+        else
+            Text(
+                text = "No tests taken yet.",
+                color = MaterialTheme.colorScheme.onTertiary,
+                style = localWindowInfo.current.footnoteTextStyle,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxWidth()
+            )
         IconButton(
             iconInteractableIcon = InteractableIcon(
                 function = {

@@ -129,7 +129,7 @@ fun <T> ListSelection(
                 .border(1.dp, backgroundColorAnimValue.value)
             , overflow = FlowColumnOverflow.Visible
         ) {
-            selected.value.forEachIndexed {i, it ->
+            selected.value.forEachIndexed {_, it ->
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -149,7 +149,6 @@ fun <T> ListSelection(
             }
             if((list.value - selected.value.toSet()).isNotEmpty() && (limit < 0 || (selected.value.size<limit))){
                 val addScope = rememberCoroutineScope()
-                val curAnimateState = AnimateState.localAnimateState.current
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -157,9 +156,6 @@ fun <T> ListSelection(
                         .background(textColorAnimValue.value)
                         .clickable {
                             addScope.launch {
-                                AnimateState.setAnimateState(
-                                    curAnimateState.copy(overlayVisibility = 0.3f)
-                                )
                                 DialogPrompt.sendDialog(
                                     DialogPrompt(
                                         message = "Select vocabulary types to apply",

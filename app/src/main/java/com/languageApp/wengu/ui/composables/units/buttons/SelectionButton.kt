@@ -41,7 +41,6 @@ inline fun <reified T>SelectionButton(
     listTextColor : Color = buttonColor,
 ){
     val dialogCoroutine = rememberCoroutineScope()
-    val localAnimateState = AnimateState.localAnimateState.current
     Column(
         modifier = modifier
             .height(IntrinsicSize.Max)
@@ -74,18 +73,12 @@ inline fun <reified T>SelectionButton(
                 .background(listColor)
                 .clickable {
                     dialogCoroutine.launch {
-                        AnimateState.setAnimateState(
-                            localAnimateState.copy(overlayVisibility = 0.3f)
-                        )
                         DialogPrompt.sendDialog(
                             DialogPrompt(
                                 message = message,
                                 type = DialogPromptType.LIST_SELECTION(
                                     list = optionList.value.map { it.toString() },
                                     selectItem = {str ->
-                                        AnimateState.setAnimateState(
-                                            localAnimateState.copy(overlayVisibility = 0f)
-                                        )
                                         onSelect(optionList.value.find { str == it.toString() } ?: optionList.value[0])
                                     }
                                 ),

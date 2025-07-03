@@ -52,6 +52,7 @@ fun VocabScreen(
 ){
     val coroutineScope = rememberCoroutineScope()
     Box(modifier = Modifier.fillMaxSize()){
+        if(vocabList.value.isNotEmpty())
         LazyColumn(
             modifier = modifier
                 .fillMaxSize()
@@ -117,21 +118,6 @@ fun VocabScreen(
                             .clickable {
                                 viewingVocabState.value = vocab
                                 navigateTo("VocabResults")
-                                coroutineScope.launch {
-                                    DialogPrompt.sendDialog(
-                                        DialogPrompt(
-                                            message = "Generate test vocab results?",
-                                            function = {
-                                                DebugHelper.generateVocabResults(vocab.id).forEach {
-                                                    onDataAction(
-                                                        DataAction.Upsert(it)
-                                                    )
-                                                }
-                                            },
-                                            type = DialogPromptType.CONFIRMATION
-                                        )
-                                    )
-                                }
                             }
                             .padding(localWindowInfo.current.slightOffset)
                     ){
@@ -155,6 +141,16 @@ fun VocabScreen(
                 )
             }
         }
+        else
+            Text(
+                text = "No vocabs created yet.",
+                color = MaterialTheme.colorScheme.onTertiary,
+                style = localWindowInfo.current.footnoteTextStyle,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxWidth()
+            )
         IconButton(
             iconInteractableIcon = InteractableIcon(
                 function = {
