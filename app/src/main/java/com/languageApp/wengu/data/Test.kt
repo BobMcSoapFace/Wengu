@@ -22,7 +22,7 @@ data class Test(
     }
     companion object {
         fun getNextIndex(tests : List<Test>) : Int {
-            return tests.map { it.id }.maxOf{ it } + 1
+            return if(tests.isNotEmpty()) tests.map { it.id }.maxOf{ it } + 1 else 1
         }
         fun getTestPercent(test : Test, results: List<TestResult>) : Float{
             return results.filter{ it.testId == test.id }.filter { it.correct }.size.toFloat() /

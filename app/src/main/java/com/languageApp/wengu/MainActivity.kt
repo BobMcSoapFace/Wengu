@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
         )
-            //.fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration()
             /*
             * ^ use if 1. altering database columns/tables AND 2. don't need data to migrate
             */

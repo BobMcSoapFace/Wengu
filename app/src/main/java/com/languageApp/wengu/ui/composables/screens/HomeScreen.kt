@@ -1,6 +1,7 @@
 package com.languageApp.wengu.ui.composables.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import com.languageApp.wengu.data.Test
 import com.languageApp.wengu.data.TestQuestion
 import com.languageApp.wengu.data.TestResult
 import com.languageApp.wengu.data.Vocab
+import com.languageApp.wengu.data.settings.UserSettings
 import com.languageApp.wengu.modules.DebugHelper
 import com.languageApp.wengu.ui.composables.units.Divider
 import com.languageApp.wengu.ui.composables.units.TestCard
@@ -46,8 +48,27 @@ fun HomeScreen(
 ){
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
+    val backgroundColor = when(UserSettings.localSettings.current.useDarkMode){
+        1 -> MaterialTheme.colorScheme.background
+        0 -> MaterialTheme.colorScheme.secondary
+        else ->
+            if(isSystemInDarkTheme())
+                MaterialTheme.colorScheme.background
+            else
+                MaterialTheme.colorScheme.secondary
+    }
+    val textColor = when(UserSettings.localSettings.current.useDarkMode){
+        1 -> MaterialTheme.colorScheme.onBackground
+        0 -> MaterialTheme.colorScheme.onSecondary
+        else ->
+            if(isSystemInDarkTheme())
+                MaterialTheme.colorScheme.onBackground
+            else
+                MaterialTheme.colorScheme.onSecondary
+    }
     Box(
         modifier = Modifier
+            .background(backgroundColor)
             .fillMaxSize()
     ){
         Column(
@@ -164,7 +185,7 @@ fun HomeScreen(
                             topEndPercent = 100
                         )
                     )
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(backgroundColor)
             )
             if(tests.value.isNotEmpty()){
                 val bestTest = remember {
@@ -174,7 +195,7 @@ fun HomeScreen(
                     Text(
                         text = "Your best test",
                         style = localWindowInfo.current.titleTextStyle,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = textColor,
                         textAlign = TextAlign.Left,
                         modifier = Modifier
                             .fillMaxWidth(0.8f)
@@ -197,7 +218,7 @@ fun HomeScreen(
                     Text(
                         text = "Your best vocab",
                         style = localWindowInfo.current.titleTextStyle,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = textColor,
                         textAlign = TextAlign.Left,
                         modifier = Modifier
                             .fillMaxWidth(0.8f)
@@ -210,7 +231,7 @@ fun HomeScreen(
                             results = testResults.value
                         )*100) + "%",
                         style = localWindowInfo.current.titleTextStyle,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = textColor,
                         textAlign = TextAlign.Left,
                         modifier = Modifier
                             .fillMaxWidth(0.8f)

@@ -1,5 +1,6 @@
 package com.languageApp.wengu.ui.composables.screens
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -25,6 +26,7 @@ import com.languageApp.wengu.data.DataEntry
 import com.languageApp.wengu.data.Test
 import com.languageApp.wengu.data.TestResult
 import com.languageApp.wengu.data.Vocab
+import com.languageApp.wengu.data.settings.UserSettings
 import com.languageApp.wengu.data.settings.UserSettingsData
 import com.languageApp.wengu.modules.DebugHelper.Companion.generateTests
 import com.languageApp.wengu.modules.DialogPrompt
