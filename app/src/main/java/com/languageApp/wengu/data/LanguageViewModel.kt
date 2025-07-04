@@ -25,9 +25,9 @@ class LanguageViewModel(
     private val application : Application,
     private val db : AppDatabase,
 ) : ViewModel() {
-    private val _vocabSortType = MutableStateFlow(SortType.Vocab.DATE)
-    private val _testSortType = MutableStateFlow(SortType.Test.DATE)
-    private val _testResultSortType = MutableStateFlow(SortType.TestResult.DATE)
+    private val _vocabSortType = MutableStateFlow(SortType.Vocab.ID)
+    private val _testSortType = MutableStateFlow(SortType.Test.ID)
+    private val _testResultSortType = MutableStateFlow(SortType.TestResult.ID)
     private val _animateState = MutableStateFlow(AnimateState())
     private val _vocab : Flow<List<Vocab>> = _vocabSortType.flatMapLatest {
         when(_vocabSortType.value) {

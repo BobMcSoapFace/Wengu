@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,7 +48,7 @@ inline fun <reified T>ListManager(
     listColor : Color = textColor,
     listTextColor : Color = buttonColor,
 ){
-    Box(
+    Column(
         modifier = modifier
             .padding(localWindowInfo.current.buttonAnimateSize)
             .clip(RoundedCornerShape(localWindowInfo.current.buttonRounding))
@@ -56,8 +58,7 @@ inline fun <reified T>ListManager(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(localWindowInfo.current.navigateBarHeight)
-                .align(Alignment.TopCenter)
+                .height(IntrinsicSize.Max)
             , contentAlignment = Alignment.TopCenter
         ){
             Text(
@@ -66,14 +67,16 @@ inline fun <reified T>ListManager(
                 style = localWindowInfo.current.fieldLabeltextStyle,
                 overflow = TextOverflow.Visible,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .padding(localWindowInfo.current.closeOffset)
+                    .align(Alignment.Center)
             )
         }
         LazyColumn(
             modifier = Modifier
                 .height(localWindowInfo.current.dialogListHeight)
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter)
                 .padding(localWindowInfo.current.closeOffset)
                 .clip(RoundedCornerShape(localWindowInfo.current.buttonRounding))
                 .border(

@@ -52,9 +52,9 @@ inline fun <reified T>SelectionButton(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(localWindowInfo.current.textFieldHeight)
+                .height(IntrinsicSize.Max)
                 .padding(localWindowInfo.current.closeOffset)
-            , contentAlignment = Alignment.BottomCenter
+            , contentAlignment = Alignment.Center
         ){
             Text(
                 text = label,
@@ -62,7 +62,9 @@ inline fun <reified T>SelectionButton(
                 style = localWindowInfo.current.fieldLabeltextStyle,
                 overflow = TextOverflow.Visible,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(0.85f)
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .padding(localWindowInfo.current.closeOffset)
             )
         }
         Box(

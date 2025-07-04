@@ -19,20 +19,32 @@ data class Vocab(
     val vocabLanguage : String,
     val dateCreated : Long, //formatted in total seconds since 1970/1/1
 ) : DataEntry {
-    fun getDate() : Date {
-        return Date(dateCreated)
-    }
-    fun getTypes() : Set<String> {
-        return this.type.split(TYPE_DELIMITER).map { it.trim().lowercase() } as Set<String>
-    }
     companion object {
         const val TYPE_DELIMITER = "/"
         const val LANGUAGES_DELIMITER = "/"
-        /**
-        * Enumerations used to edit SQL commands to specify specific properties to get/find entries by.
-         * @property label Name of property inserted into SQL queries.
-         */
+        fun getVocabPercent(vocab: Vocab, results: List<TestResult>) : Float{
+            return results.filter{ it.vocabId == vocab.id }.filter { it.correct }.size.toFloat() /
+                    getVocabResultCount(vocab, results)
+        }
+        fun getVocabResultCount(vocab: Vocab, results: List<TestResult>) : Int {
+            return results.filter{ it.vocabId == vocab.id }.size
+        }
+        fun getTotalTimeTaken(vocab : Vocab, results: List<TestResult>) : Int {
+            return results.filter { it.vocabId == vocab.id }.sumOf { it.secondsTaken }
+        }
+        fun getBestVocab(vocabs: List<Vocab>, results : List<TestResult>) : Vocab? {
+            return vocabs
+                .filter { !getVocabPercent(it, results).isNaN() }
+                .sortedBy { getTotalTimeTaken(it, results) }
+                .sortedByDescending { getVocabResultCount(it, results) }
+                .maxByOrNull { getVocabPercent(it, results) }
+
+        }
     }
+    /**
+     * Enumerations used to edit SQL commands to specify specific properties to get/find entries by.
+     * @property label Name of property inserted into SQL queries.
+     */
     enum class Properties(val label : String){
         ID("id"),
         VOCAB("vocab"),

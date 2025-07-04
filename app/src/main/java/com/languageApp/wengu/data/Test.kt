@@ -4,7 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
-import java.security.KeyStore.TrustedCertificateEntry
+import kotlin.math.abs
 
 @Stable
 @Entity(tableName = "Test")
@@ -23,6 +23,23 @@ data class Test(
     companion object {
         fun getNextIndex(tests : List<Test>) : Int {
             return tests.map { it.id }.maxOf{ it } + 1
+        }
+        fun getTestPercent(test : Test, results: List<TestResult>) : Float{
+            return results.filter{ it.testId == test.id }.filter { it.correct }.size.toFloat() /
+                    getTestResultCount(test, results)
+        }
+        fun getTestResultCount(test : Test, results: List<TestResult>) : Int {
+            return results.filter{ it.testId == test.id }.size
+        }
+        fun getTotalTimeTaken(test : Test, results: List<TestResult>) : Int {
+            return results.filter { it.testId == test.id }.sumOf { it.secondsTaken }
+        }
+        fun getBestTest(tests: List<Test>, results : List<TestResult>) : Test? {
+            return tests
+                .filter { !getTestPercent(it, results).isNaN() }
+                .sortedBy { getTotalTimeTaken(it, results) }
+                .sortedByDescending { getTestResultCount(it, results) }
+                .maxByOrNull { getTestPercent(it, results) }
         }
     }
 }

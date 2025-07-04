@@ -13,7 +13,7 @@ import kotlin.math.abs
 abstract class DebugHelper {
     companion object {
         private val GENERATED_TYPES = listOf("noun", "adjective", "verb", "adverb")
-        private val RANDOM = Random()
+        val RANDOM = Random()
         private const val DEFAULT_GENERATED_VOCAB_NUM = 20
         fun generateVocab(numVocab : Int = DEFAULT_GENERATED_VOCAB_NUM) : List<Vocab> {
             val list : MutableList<Vocab> = mutableListOf()

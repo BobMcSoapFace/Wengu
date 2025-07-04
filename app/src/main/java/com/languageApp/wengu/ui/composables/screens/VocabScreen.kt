@@ -37,6 +37,8 @@ import com.languageApp.wengu.modules.DialogPrompt
 import com.languageApp.wengu.modules.DialogPromptType
 import com.languageApp.wengu.ui.InteractableIcon
 import com.languageApp.wengu.ui.WindowInfo
+import com.languageApp.wengu.ui.composables.units.Divider
+import com.languageApp.wengu.ui.composables.units.VocabCard
 import com.languageApp.wengu.ui.composables.units.buttons.IconButton
 import com.languageApp.wengu.ui.localWindowInfo
 import kotlinx.coroutines.launch
@@ -48,9 +50,7 @@ fun VocabScreen(
     navigateTo : (String) -> Unit,
     editingVocabState : MutableState<Vocab?>,
     viewingVocabState : MutableState<Vocab?>,
-    onDataAction : (DataAction) -> Unit,
 ){
-    val coroutineScope = rememberCoroutineScope()
     Box(modifier = Modifier.fillMaxSize()){
         if(vocabList.value.isNotEmpty())
         LazyColumn(
@@ -61,89 +61,20 @@ fun VocabScreen(
             verticalArrangement = Arrangement.Top
         ) {
             items(vocabList.value, key = { it.id }) { vocab ->
-                Box(
-                    modifier = Modifier
-                        .padding(vertical = localWindowInfo.current.columnItemOffset)
-                        .padding(localWindowInfo.current.buttonAnimateSize)
-                        .fillMaxWidth()
-                        .height(localWindowInfo.current.vocabItemHeight)
-                        .clip(RoundedCornerShape(localWindowInfo.current.buttonRounding))
-                        .background(MaterialTheme.colorScheme.primary)
-                        .clickable {
-                            editingVocabState.value = vocab
-                            navigateTo("AddVocab")
-                        }
-                        .padding(localWindowInfo.current.closeOffset)
-                ) {
-                    Text(
-                        text = vocab.vocab,
-                        textAlign = TextAlign.Left,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = localWindowInfo.current.vocabTextStyle,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .fillMaxWidth(0.675f)
-                            .fillMaxHeight(0.6f)
-                            .align(Alignment.TopStart)
-                    )
-                    Text(
-                        text = vocab.pronunciation,
-                        textAlign = TextAlign.Left,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onTertiary,
-                        style = localWindowInfo.current.buttonTextStyle,
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .fillMaxHeight(0.4f)
-                            .align(Alignment.BottomStart)
-                    )
-                    Text(
-                        text = vocab.translation,
-                        textAlign = TextAlign.Right,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSecondary,
-                        style = localWindowInfo.current.buttonTextStyle,
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .fillMaxHeight(0.4f)
-                            .align(Alignment.BottomEnd)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.3f)
-                            .fillMaxHeight(0.45f)
-                            .align(Alignment.TopEnd)
-                            .clip(RoundedCornerShape(localWindowInfo.current.buttonRounding))
-                            .background(MaterialTheme.colorScheme.secondary)
-                            .clickable {
-                                viewingVocabState.value = vocab
-                                navigateTo("VocabResults")
-                            }
-                            .padding(localWindowInfo.current.slightOffset)
-                    ){
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = vocab.vocab + " test results icon",
-                            tint = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .aspectRatio(1f, true)
-                                .align(Alignment.Center)
-                        )
-                    }
-                }
+                VocabCard(
+                    vocab = vocab,
+                    editingVocabState = editingVocabState,
+                    navigateTo = navigateTo,
+                    viewingVocabState = viewingVocabState,
+                )
             }
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(localWindowInfo.current.vocabItemHeight)
-                )
+                Divider(2)
             }
         }
         else
             Text(
-                text = "No vocabs created yet.",
+                text = "No vocabs created yet.c",
                 color = MaterialTheme.colorScheme.onTertiary,
                 style = localWindowInfo.current.footnoteTextStyle,
                 textAlign = TextAlign.Center,

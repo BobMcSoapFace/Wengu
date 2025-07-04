@@ -128,81 +128,84 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-            val screens : List<Screen> = listOf(
-                Screen(
-                    route = "Homepage",
-                    screen = {
-                        HomepageScreen(
-                            vocabList = vocabListState,
-                            testList = testListState,
-                            getTestResults = languageViewModel::getTestResults,
-                            onDataAction = languageViewModel::onDataAction,
-                            navigateTo = navigateTo,
-                            navigateBack = navigateBack,
-                            editingVocabState = languageViewModel.editingVocab,
-                            viewingVocabState = languageViewModel.viewingVocab,
-                            userSettingsData = languageViewModel.userSettings
-                        )
-                    }
-                ),
-                Screen(
-                    route = "AddVocab",
-                    screen = {
-                        AddVocabScreen(
-                            vocabList = vocabListState,
-                            onDataAction = languageViewModel::onDataAction,
-                            navigateTo = navigateTo,
-                            navigateBack = navigateBack,
-                            editingVocab = languageViewModel.editingVocab.value
-                        )
-                    }
-                ),
-                Screen(
-                    route = "VocabResults",
-                    screen = {
-                        VocabResultsScreen(
-                            navigateBack = navigateBack,
-                            selectedVocab = languageViewModel.viewingVocab.value,
-                            testResults = testResultListState
-                        )
-                    }
-                ),
-                Screen(
-                    route = "TestCreator",
-                    screen = {
-                        TestCreatorScreen(
-                            navigateUp = navigateBack,
-                            navigateTo = navigateTo,
-                            vocab = vocabListState,
-                            activeTest = languageViewModel.activeTestState,
-                            tests = testListState,
-                        )
-                    }
-                ),
-                Screen(
-                    route = "ActiveTest",
-                    screen = {
-                        if(languageViewModel.activeTestState.value!=null) {
-                            ActiveTestScreen(
-                                testState = languageViewModel.activeTestState.value!!,
-                                navigateUp = navigateBack,
-                                onDataAction = languageViewModel::onDataAction
+            val screens : List<Screen> = remember {
+                listOf(
+                    Screen(
+                        route = "Homepage",
+                        screen = {
+                            HomepageScreen(
+                                vocabList = vocabListState,
+                                testList = testListState,
+                                testResults = testResultListState,
+                                getTestResults = languageViewModel::getTestResults,
+                                onDataAction = languageViewModel::onDataAction,
+                                navigateTo = navigateTo,
+                                navigateBack = navigateBack,
+                                editingVocabState = languageViewModel.editingVocab,
+                                viewingVocabState = languageViewModel.viewingVocab,
+                                userSettingsData = languageViewModel.userSettings
                             )
-                        } else {
-                            Box(modifier = Modifier.fillMaxSize()){
-                                Text(
-                                    text = "Loading test... ",
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    style = localWindowInfo.current.footnoteTextStyle,
-                                    modifier = Modifier.align(Alignment.Center)
-                                )
-                            }
                         }
+                    ),
+                    Screen(
+                        route = "AddVocab",
+                        screen = {
+                            AddVocabScreen(
+                                vocabList = vocabListState,
+                                onDataAction = languageViewModel::onDataAction,
+                                navigateTo = navigateTo,
+                                navigateBack = navigateBack,
+                                editingVocab = languageViewModel.editingVocab.value
+                            )
+                        }
+                    ),
+                    Screen(
+                        route = "VocabResults",
+                        screen = {
+                            VocabResultsScreen(
+                                navigateBack = navigateBack,
+                                selectedVocab = languageViewModel.viewingVocab.value,
+                                testResults = testResultListState
+                            )
+                        }
+                    ),
+                    Screen(
+                        route = "TestCreator",
+                        screen = {
+                            TestCreatorScreen(
+                                navigateUp = navigateBack,
+                                navigateTo = navigateTo,
+                                vocab = vocabListState,
+                                activeTest = languageViewModel.activeTestState,
+                                tests = testListState,
+                            )
+                        }
+                    ),
+                    Screen(
+                        route = "ActiveTest",
+                        screen = {
+                            if (languageViewModel.activeTestState.value != null) {
+                                ActiveTestScreen(
+                                    testState = languageViewModel.activeTestState.value!!,
+                                    navigateUp = navigateBack,
+                                    onDataAction = languageViewModel::onDataAction
+                                )
+                            } else {
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    Text(
+                                        text = "Loading test... ",
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        style = localWindowInfo.current.footnoteTextStyle,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
+                            }
 
-                    }
-                ),
+                        }
+                    ),
 
-            )
+                    )
+            }
             val windowInfo = rememberWindowInfo()
             WenguTheme(darkTheme = when(userSettingsState.value.useDarkMode){
                 1 -> true

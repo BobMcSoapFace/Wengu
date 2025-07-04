@@ -46,17 +46,21 @@ fun VocabResultsScreen(
 ){
     val sort = Sort.localSort.current
     val testResultItems = remember {
-        if(selectedVocab != null) testResults.value
-            .filter{ it.vocabId == selectedVocab.id }
-            .sortedByDescending { when(sort.testResultSortType){
-                SortType.TestResult.BY_TEST -> return@sortedByDescending it.testId.toLong()
-                SortType.TestResult.SECONDS_TAKEN -> return@sortedByDescending  it.secondsTaken.toLong()
-                else -> return@sortedByDescending it.dateTaken
-            } }
+        if(selectedVocab != null) when(sort.testResultSortType){
+                SortType.TestResult.BY_TEST -> testResults.value
+                    .filter{ it.vocabId == selectedVocab.id }
+                    .sortedByDescending { it.testId }
+                SortType.TestResult.SECONDS_TAKEN -> testResults.value
+                    .filter{ it.vocabId == selectedVocab.id }
+                    .sortedBy { it.secondsTaken }
+                else -> testResults.value
+                    .filter{ it.vocabId == selectedVocab.id }
+                    .sortedByDescending { it.dateTaken }
+        }
         else listOf()
     }
-    val numCorrect = remember { testResultItems.filter{ it.correct }.size}
-    val percentCorrect = remember { if(testResultItems.isNotEmpty()) numCorrect.toFloat()/testResultItems.size else 0.0f }
+    val numCorrect = remember { testResultItems.filter{ it.correct }.size }
+    val percentCorrect = remember { if(selectedVocab!=null) TestResult.getVocabPercent(selectedVocab, testResults.value) else Float.NaN }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -102,6 +106,16 @@ fun VocabResultsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
             )
+            Text(
+                text = TestResult.getGradeRating(percentCorrect),
+                style = localWindowInfo.current.titleTextStyle,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Right,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
         }
         if(selectedVocab != null && testResultItems.isNotEmpty())
         LazyColumn(
@@ -133,7 +147,7 @@ fun VocabResultsScreen(
                             .align(Alignment.TopCenter)
                     )
                     Text(
-                        text = LocalDateTime.ofInstant(java.time.Instant.ofEpochSecond(result.dateTaken), ZoneId.systemDefault()).toString().split("T")[1],
+                        text = "Test ${result.testId}",
                         textAlign = TextAlign.Left,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurface,

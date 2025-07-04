@@ -45,6 +45,7 @@ enum class HomepageState {
 fun HomepageScreen(
     vocabList : State<List<Vocab>>,
     testList : State<List<Test>>,
+    testResults : State<List<TestResult>>,
     onDataAction : (DataAction) -> Unit,
     getTestResults : suspend (DataEntry) -> List<TestResult>,
     navigateTo : (String) -> Unit,
@@ -58,8 +59,6 @@ fun HomepageScreen(
     var homepageState by rememberSaveable {
         mutableStateOf(HomepageState.HOMEPAGE)
     }
-    val testScope = rememberCoroutineScope()
-    val animateState = AnimateState.localAnimateState.current
     val navigateables : List<InteractableIcon> = remember {
         listOf(
             InteractableIcon({
@@ -70,20 +69,6 @@ fun HomepageScreen(
             }, "Vocab", primary, onPrimary, icon=Icons.Default.Star),
             InteractableIcon({
                 homepageState = HomepageState.TESTS
-                testScope.launch {
-                    DialogPrompt.sendDialog(
-                        DialogPrompt(
-                            type = DialogPromptType.CONFIRMATION,
-                            function = {
-                                generateTests().forEach {
-                                    onDataAction(DataAction.Upsert(it))
-                                }
-                            },
-                            message = "Generate tests?",
-                            confirmLabel = "Generate"
-                        )
-                    )
-                }
             }, "Tests", primary, onPrimary, icon=Icons.Default.Email),
             InteractableIcon({
                 homepageState = HomepageState.SETTINGS
@@ -94,10 +79,18 @@ fun HomepageScreen(
         .fillMaxSize()
     ){
         when(homepageState){
-            HomepageState.HOMEPAGE -> {}
+            HomepageState.HOMEPAGE -> {
+                HomeScreen(
+                    tests = testList,
+                    vocab = vocabList,
+                    testResults = testResults,
+                    navigateTo = navigateTo,
+                    changeScreen = { homepageState = it },
+                    getTestResults = getTestResults
+                )
+            }
             HomepageState.TESTS -> {
                 TestViewerScreen(
-                    navigateUp = navigateBack,
                     navigateTo = navigateTo,
                     tests = testList,
                     getTestResults = getTestResults,
@@ -109,7 +102,6 @@ fun HomepageScreen(
                     navigateTo = navigateTo,
                     editingVocabState = editingVocabState,
                     viewingVocabState = viewingVocabState,
-                    onDataAction = onDataAction
                 )
             }
             HomepageState.SETTINGS -> {
